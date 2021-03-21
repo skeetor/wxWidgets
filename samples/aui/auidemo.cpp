@@ -99,6 +99,17 @@ class MyFrame : public wxFrame
         ID_NotebookArtSimple,
         ID_NotebookAlignTop,
         ID_NotebookAlignBottom,
+        ID_NotebookSerialize,
+        ID_NotebookDeserialize,
+        ID_NotebookCopySerialize,
+        ID_NotebookSplitLeft,
+        ID_NotebookSplitRight,
+        ID_NotebookSplitTop,
+        ID_NotebookSplitBottom,
+        ID_NotebookSplitLeftBorder,
+        ID_NotebookSplitRightBorder,
+        ID_NotebookSplitTopBorder,
+        ID_NotebookSplitBottomBorder,
 
         ID_SampleItem,
 
@@ -152,6 +163,11 @@ private:
     void OnExit(wxCommandEvent& evt);
     void OnAbout(wxCommandEvent& evt);
     void OnTabAlignment(wxCommandEvent &evt);
+    wxAuiNotebook *FindNotebook(void);
+    void OnTabSplit(wxCommandEvent &evt);
+    void OnTabSerialize(wxCommandEvent &evt);
+    void OnTabDeserialize(wxCommandEvent &evt);
+    void OnTabCopySerialize(wxCommandEvent &evt);
 
     void OnGradient(wxCommandEvent& evt);
     void OnToolbarResizing(wxCommandEvent& evt);
@@ -168,6 +184,7 @@ private:
     wxMenu* m_perspectives_menu;
     long m_notebook_style;
     long m_notebook_theme;
+    wxString m_notebookLayout;
 
     wxDECLARE_EVENT_TABLE();
 };
@@ -606,6 +623,17 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
     EVT_MENU(ID_NotebookArtSimple, MyFrame::OnNotebookFlag)
     EVT_MENU(ID_NotebookAlignTop,     MyFrame::OnTabAlignment)
     EVT_MENU(ID_NotebookAlignBottom,  MyFrame::OnTabAlignment)
+    EVT_MENU(ID_NotebookSerialize,  MyFrame::OnTabSerialize)
+    EVT_MENU(ID_NotebookDeserialize,  MyFrame::OnTabDeserialize)
+    EVT_MENU(ID_NotebookCopySerialize,  MyFrame::OnTabCopySerialize)
+    EVT_MENU(ID_NotebookSplitLeft,  MyFrame::OnTabSplit)
+    EVT_MENU(ID_NotebookSplitRight, MyFrame::OnTabSplit)
+    EVT_MENU(ID_NotebookSplitTop, MyFrame::OnTabSplit)
+    EVT_MENU(ID_NotebookSplitBottom, MyFrame::OnTabSplit)
+    EVT_MENU(ID_NotebookSplitLeftBorder, MyFrame::OnTabSplit)
+    EVT_MENU(ID_NotebookSplitRightBorder, MyFrame::OnTabSplit)
+    EVT_MENU(ID_NotebookSplitTopBorder, MyFrame::OnTabSplit)
+    EVT_MENU(ID_NotebookSplitBottomBorder, MyFrame::OnTabSplit)
     EVT_MENU(ID_NoGradient, MyFrame::OnGradient)
     EVT_MENU(ID_VerticalGradient, MyFrame::OnGradient)
     EVT_MENU(ID_HorizontalGradient, MyFrame::OnGradient)
@@ -734,6 +762,23 @@ MyFrame::MyFrame(wxWindow* parent,
     notebook_menu->AppendCheckItem(ID_NotebookScrollButtons, _("Scroll Buttons Visible"));
     notebook_menu->AppendCheckItem(ID_NotebookWindowList, _("Window List Button Visible"));
     notebook_menu->AppendCheckItem(ID_NotebookTabFixedWidth, _("Fixed-width Tabs"));
+
+    wxMenu *submenu = new wxMenu;
+    submenu->Append(new wxMenuItem(submenu, ID_NotebookSplitLeft, wxString(wxT("Left")), wxEmptyString, wxITEM_NORMAL));
+    submenu->Append(new wxMenuItem(submenu, ID_NotebookSplitRight, wxString(wxT("Right")), wxEmptyString, wxITEM_NORMAL));
+    submenu->Append(new wxMenuItem(submenu, ID_NotebookSplitTop, wxString(wxT("Top")), wxEmptyString, wxITEM_NORMAL));
+    submenu->Append(new wxMenuItem(submenu, ID_NotebookSplitBottom, wxString(wxT("Bottom")), wxEmptyString, wxITEM_NORMAL));
+    notebook_menu->Append(new wxMenuItem(notebook_menu, wxID_ANY, wxT("Split tab"), wxEmptyString, wxITEM_NORMAL, submenu));
+    submenu = new wxMenu;
+    submenu->Append(new wxMenuItem(submenu, ID_NotebookSplitLeftBorder, wxString(wxT("Left")), wxEmptyString, wxITEM_NORMAL));
+    submenu->Append(new wxMenuItem(submenu, ID_NotebookSplitRightBorder, wxString(wxT("Right")), wxEmptyString, wxITEM_NORMAL));
+    submenu->Append(new wxMenuItem(submenu, ID_NotebookSplitTopBorder, wxString(wxT("Top")), wxEmptyString, wxITEM_NORMAL));
+    submenu->Append(new wxMenuItem(submenu, ID_NotebookSplitBottomBorder, wxString(wxT("Bottom")), wxEmptyString, wxITEM_NORMAL));
+    notebook_menu->Append(new wxMenuItem(notebook_menu, wxID_ANY, wxT("Split to border"), wxEmptyString, wxITEM_NORMAL, submenu));
+    notebook_menu->AppendSeparator();
+    notebook_menu->Append(new wxMenuItem(submenu, ID_NotebookCopySerialize, wxString(wxT("Copy layout to Clipboard")), wxEmptyString, wxITEM_NORMAL));
+    notebook_menu->Append(new wxMenuItem(submenu, ID_NotebookSerialize, wxString(wxT("Save layout")), wxEmptyString, wxITEM_NORMAL));
+    notebook_menu->Append(new wxMenuItem(submenu, ID_NotebookDeserialize, wxString(wxT("Restore layout")), wxEmptyString, wxITEM_NORMAL));
 
     m_perspectives_menu = new wxMenu;
     m_perspectives_menu->Append(ID_CreatePerspective, _("Create Perspective"));
@@ -1521,29 +1566,160 @@ void MyFrame::OnDropDownToolbarItem(wxAuiToolBarEvent& evt)
     }
 }
 
+wxAuiNotebook *MyFrame::FindNotebook(void)
+{
+    wxAuiPaneInfoArray &all_panes = m_mgr.GetAllPanes();
+    for (size_t i = 0, count = all_panes.GetCount(); i < count; ++i)
+    {
+        wxAuiPaneInfo &pane = all_panes.Item(i);
+        if (pane.window->IsKindOf(CLASSINFO(wxAuiNotebook)))
+        {
+            wxAuiNotebook *nb = (wxAuiNotebook *)pane.window;
+            return nb;
+        }
+    }
+
+    return nullptr;
+}
+
+void MyFrame::OnTabCopySerialize(wxCommandEvent &)
+{
+    wxAuiNotebook *nb = FindNotebook();
+
+    if (!nb)
+        return;
+
+    wxString s = nb->SerializeLayout() + "\n\n";
+    wxSize csz = nb->GetClientSize();
+    s << "NotebookSize: " << csz.x << "/" << csz.y << "\n";
+    s << "TabCtrlInfo:\n";
+
+    for (int i = 0; i < nb->GetPageCount(); i++)
+    {
+        wxWindow *page = nb->GetPage(i);
+        wxAuiTabCtrl *ctrl;
+        int tabIndex;
+        nb->FindTab(page, &ctrl, &tabIndex);
+
+        wxSize sz = page->GetClientSize();
+        wxPoint pt = page->GetPosition();
+        wxSize tsz = ctrl->GetClientSize();
+        wxPoint tpt = ctrl->GetPosition();
+
+        s << "Name: " + nb->GetPageText(i);
+        s << " TabCtrl: " << (void *)ctrl;
+        s << " Window: " << (void *)page;
+        s << " PageIndex: " << i;
+        s << " TabIndex: " << tabIndex;
+        s << " TabPosition: " << tpt.x << "/" << tpt.y;
+        s << " TabSize: " << tsz.x << "/" << tsz.y;
+        s << " PagePosition: " << pt.x << "/" << pt.y;
+        s << " PageSize: " << sz.x << "/" << sz.y;
+        s << "\n";
+    }
+
+#if wxUSE_CLIPBOARD
+    if (wxTheClipboard->Open())
+    {
+        wxTheClipboard->SetData(new wxTextDataObject(s));
+        wxTheClipboard->Close();
+    }
+#endif
+}
+
+void MyFrame::OnTabSerialize(wxCommandEvent &)
+{
+    wxAuiNotebook *nb = FindNotebook();
+    if (!nb)
+        return;
+
+    m_notebookLayout = nb->SerializeLayout();
+}
+
+void MyFrame::OnTabDeserialize(wxCommandEvent &)
+{
+    wxAuiNotebook *nb = FindNotebook();
+    if (!nb)
+        return;
+
+    nb->DeserializeLayout(m_notebookLayout);
+}
+
+void MyFrame::OnTabSplit(wxCommandEvent &evt)
+{
+    wxAuiNotebook *nb = FindNotebook();
+    if (!nb)
+        return;
+
+    int direction = 0;
+    bool border = false;
+    switch (evt.GetId())
+    {
+        case ID_NotebookSplitLeftBorder:
+            direction = wxLEFT;
+            border = true;
+        break;
+
+        case ID_NotebookSplitLeft:
+            direction = wxLEFT;
+        break;
+
+        case ID_NotebookSplitRightBorder:
+            direction = wxRIGHT;
+            border = true;
+        break;
+
+        case ID_NotebookSplitRight:
+            direction = wxRIGHT;
+        break;
+
+        case ID_NotebookSplitTopBorder:
+            direction = wxTOP;
+            border = true;
+        break;
+
+        case ID_NotebookSplitTop:
+            direction = wxTOP;
+        break;
+
+        case ID_NotebookSplitBottomBorder:
+            direction = wxBOTTOM;
+            border = true;
+        break;
+
+        case ID_NotebookSplitBottom:
+            direction = wxBOTTOM;
+        break;
+
+        default:
+            return;
+    }
+
+    int page = nb->GetSelection();
+    wxAuiTabCtrl *ctrl = nullptr;
+    if (!border)
+        ctrl = nb->FindTab(nb->GetPage(nb->GetSelection()));
+
+    nb->Split(page, direction, ctrl, border);
+/*    wxAuiTabCtrl *swp = nb->FindTab(nb->GetPage(0));
+    nb->SwapTabControls(swp, ctrl);*/
+}
 
 void MyFrame::OnTabAlignment(wxCommandEvent &evt)
 {
-    size_t i, count;
-    wxAuiPaneInfoArray& all_panes = m_mgr.GetAllPanes();
-    for (i = 0, count = all_panes.GetCount(); i < count; ++i)
-    {
-        wxAuiPaneInfo& pane = all_panes.Item(i);
-        if (pane.window->IsKindOf(CLASSINFO(wxAuiNotebook)))
-        {
-            wxAuiNotebook* nb = (wxAuiNotebook*)pane.window;
+    wxAuiNotebook *nb = FindNotebook();
+    if (!nb)
+        return;
 
-            long style = nb->GetWindowStyleFlag();
-            style &= ~(wxAUI_NB_TOP | wxAUI_NB_BOTTOM);
-            if (evt.GetId() == ID_NotebookAlignTop)
-                style |= wxAUI_NB_TOP;
-            else if (evt.GetId() == ID_NotebookAlignBottom)
-                style |= wxAUI_NB_BOTTOM;
-            nb->SetWindowStyleFlag(style);
+    long style = nb->GetWindowStyleFlag();
+    style &= ~(wxAUI_NB_TOP | wxAUI_NB_BOTTOM);
+    if (evt.GetId() == ID_NotebookAlignTop)
+        style |= wxAUI_NB_TOP;
+    else if (evt.GetId() == ID_NotebookAlignBottom)
+        style |= wxAUI_NB_BOTTOM;
+    nb->SetWindowStyleFlag(style);
 
-            nb->Refresh();
-        }
-    }
+    nb->Refresh();
 }
 
 void MyFrame::OnExit(wxCommandEvent& WXUNUSED(event))
@@ -1703,7 +1879,25 @@ wxAuiNotebook* MyFrame::CreateNotebook()
    ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text",
                 wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , "wxTextCtrl 8" );
 
+   // Create a split at the right border
+   wxAuiTabCtrl *tab2 = ctrl->Split(2, wxRIGHT);
+
+   // Another split at the right border after page 2
+   ctrl->Split(3, wxRIGHT);
+
+   // Move page 4 below page 2 (right side of 3)
+   ctrl->Split(4, wxDOWN, tab2);
+
+   // Page 5 to the bottom border below all others
+   ctrl->Split(5, wxDOWN);
+
+   // Now move page 6 next to page 2 tabctrl
+   int sidx;
+   wxAuiTabCtrl *s = ctrl->FindTab(ctrl->GetPage(6), &sidx);
+   ctrl->MovePage(s, sidx, tab2);
+
    ctrl->Thaw();
+
    return ctrl;
 }
 

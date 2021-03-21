@@ -26,6 +26,7 @@
 #include "wx/bookctrl.h"
 #include "wx/containr.h"
 
+#include <set>
 
 class wxAuiNotebook;
 
@@ -239,6 +240,80 @@ protected:
 };
 
 
+class wxAuiPageCtrlMapping
+{
+public:
+    wxAuiPageCtrlMapping(int tabIndex = -1, int pageIndex = -1)
+        : m_tabIndex(tabIndex)
+        , m_pageIndex(pageIndex)
+    {
+    }
+
+    int m_tabIndex;
+    int m_pageIndex;
+};
+
+class wxAuiLayoutInfo
+{
+public:
+    wxAuiLayoutInfo()
+        : m_tabCtrl(nullptr)
+        , m_left(-1)
+        , m_right(-1)
+        , m_top(-1)
+        , m_bottom(-1)
+    {
+    }
+
+    wxAuiLayoutInfo(wxAuiTabCtrl *ctrl, wxWindow *page, int tabIndex, int pageIndex)
+        : m_tabCtrl(ctrl)
+        , m_left(-1)
+        , m_right(-1)
+        , m_top(-1)
+        , m_bottom(-1)
+    {
+        // When restoring, this may be a nullptr
+        if (page)
+            m_position = page->GetPosition();
+
+        addPage(tabIndex, pageIndex);
+    }
+
+    operator wxAuiTabCtrl *() { return m_tabCtrl; }
+    operator wxAuiTabCtrl const *() const { return m_tabCtrl; }
+
+    void addPage(int tabIndex, int pageIndex)
+    {
+        wxAuiPageCtrlMapping pm(tabIndex, pageIndex);
+        m_pages.push_back(pm);
+    }
+
+    size_t tabPage(int pageIndex)
+    {
+        for (wxAuiPageCtrlMapping const &pm : m_pages)
+        {
+            if (pm.m_pageIndex == pageIndex)
+                return pm.m_tabIndex;
+        }
+
+        return (size_t)-1;
+    }
+
+    wxAuiTabCtrl *m_tabCtrl;
+    std::vector<wxAuiPageCtrlMapping> m_pages;
+    wxPoint m_position;
+    wxSize m_size;
+
+#ifdef _DEBUG
+    wxString m_name;	// For debugging
+#endif
+
+    // Index of the TabCtrlInfo
+    int32_t m_left;
+    int32_t m_right;
+    int32_t m_top;
+    int32_t m_bottom;
+};
 
 
 class WXDLLIMPEXP_AUI wxAuiNotebook : public wxNavigationEnabled<wxBookCtrlBase>
@@ -303,7 +378,16 @@ public:
     int SetSelection(size_t newPage) wxOVERRIDE;
     int GetSelection() const wxOVERRIDE;
 
-    virtual void Split(size_t page, int direction);
+    /**
+     * Create a new tabctrl in the specified direction with the page. If ctrl is
+     * nullptr, then the tabctrl with the current selection will be used.
+     * The new tabctrl will be positioned relative to the specified tabctrl.
+     * If border == true, then the ctrl will be ignored, and the new page will be
+     * attached to the border of the notebook in the given direction.
+     * Direction may be one of wxLEFT, wxRIGHT, wxUP or wxDOWN.
+     * If the split worked the new tabctrl is returned, otherwise nullptr.
+     */
+    virtual wxAuiTabCtrl *Split(size_t page, int direction, wxAuiTabCtrl *ctrl = nullptr, bool border = true);
 
     const wxAuiManager& GetAuiManager() const { return m_mgr; }
 
@@ -355,6 +439,28 @@ public:
     wxAuiTabCtrl* GetTabCtrlFromPoint(const wxPoint& pt);
     wxAuiTabCtrl* GetActiveTabCtrl();
     bool FindTab(wxWindow* page, wxAuiTabCtrl** ctrl, int* idx);
+    wxAuiTabCtrl *FindTab(wxWindow* page, int *idx = nullptr);
+
+    /**
+     * Move the page from the source tab ctrl to the destination. If this was the last
+     * page, the tab ctrl will be removed.
+     */
+    void MovePage(wxAuiTabCtrl *src, int tabPageIndex, wxAuiTabCtrl *dest, int destTabIndex = -1, bool select = true);
+    void SwapTabControls(wxAuiTabCtrl *left, wxAuiTabCtrl *right);
+
+    /**
+     * Create a string which describes the current layout.
+     */
+    wxString SerializeLayout(void);
+
+    /**
+     * Restores the layout from a string previously created with SerializeLayout().
+     * This works best if the number of tabs hasn't changed in between. If more tabs
+     * are available, it still works, however if the user closed some tabs in between
+     * the layout can not be restored, as the notebook wont know what kind of tabs it should
+     * create.
+     */
+    bool DeserializeLayout(wxString layout, bool update = true);
 
 protected:
     // Common part of all ctors.
@@ -388,6 +494,35 @@ protected:
     wxWindow* GetTabFrameFromTabCtrl(wxWindow* tabCtrl);
     void RemoveEmptyTabFrames();
     void UpdateHintWindowSize();
+
+    /**
+     * Update the relations left/top/... in the list.
+     */
+    void UpdateTabRelations(std::vector<wxAuiLayoutInfo> &tabInfos);
+
+    /**
+     * Return the nearest tab in the specified direction. direction may only be
+     * one of wxLEFT, wxRIGHT, wxTOP or wxBOTTOM. They also may not be combined
+     * like wxLEFT|wxTOP.
+     * If there is no tabctrl in the specified direction -1 is returned.
+     */
+    int32_t NearestTabCtrlIndex(wxAuiLayoutInfo const &ctrl, int direction, std::vector<wxAuiLayoutInfo> &tabInfos);
+
+    std::vector<wxAuiLayoutInfo> GetTabControls(void);
+
+    /**
+     * Parse the layout from a string created by SerializeLayout().
+     */
+    bool ParseTabControls(wxString &layout, std::vector<wxAuiLayoutInfo> &infos);
+
+    /**
+     * Creates a new tabcontrol in the specified direction. If the direction already has a
+     * tabcontrol, then nothing happens. The control to be splitted must have at least two
+     * pages, otherwise it couldn't split. In that case it assumes that the first entry
+     * has enough pages, and moves the last page to the splitter, so it can be splitted.
+     * If that also fails, false is returned.
+     */
+    bool RestoreNeighbor(std::vector<wxAuiLayoutInfo> &infos, std::set<int> &unassignedPages, wxAuiLayoutInfo &splitter, int32_t targetIndex, int direction);
 
 protected:
 

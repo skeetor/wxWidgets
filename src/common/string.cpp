@@ -1329,6 +1329,24 @@ wxString wxString::Left(size_t nCount) const
   return dest;
 }
 
+wxString wxString::BeforeToken(wxString const &token)
+{
+    size_t pos = find(token);
+    wxString result;
+
+    if (pos == wxString::npos)
+    {
+        result = *this;
+        *this = "";
+        return result;
+    }
+
+    result = substr(0, pos);
+    *this = substr(pos + token.length());
+
+    return result;
+}
+
 // get all characters before the first occurrence of ch
 // (returns the whole string if ch not found)
 wxString wxString::BeforeFirst(wxUniChar ch, wxString *rest) const
@@ -1676,6 +1694,24 @@ int wxString::Find(wxUniChar ch, bool bFromEnd) const
         return false;                                                       \
     *pVal = val;                                                            \
     return !*end;
+
+bool wxString::ToInt(int *pVal, int base) const
+{
+    wxASSERT_MSG(!base || (base > 1 && base <= 36), wxT("invalid base"));
+
+    WX_STRING_TO_X_TYPE_START
+    int val = wxStrtol(start, &end, base);
+    WX_STRING_TO_X_TYPE_END
+}
+
+bool wxString::ToUInt(unsigned int *pVal, int base) const
+{
+    wxASSERT_MSG(!base || (base > 1 && base <= 36), wxT("invalid base"));
+
+    WX_STRING_TO_X_TYPE_START
+    unsigned int val = wxStrtoul(start, &end, base);
+    WX_STRING_TO_X_TYPE_END
+}
 
 bool wxString::ToLong(long *pVal, int base) const
 {
