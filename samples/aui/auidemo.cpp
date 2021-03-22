@@ -1853,48 +1853,48 @@ wxAuiNotebook* MyFrame::CreateNotebook()
    ctrl->AddPage( panel, "wxPanel", false, page_bmp );
 
 
-   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some text",
+   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some text 1",
                 wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , "wxTextCtrl 1", false, page_bmp );
 
-   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text",
+   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text 2",
                 wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , "wxTextCtrl 2" );
 
-   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text",
+   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text 3",
                 wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , "wxTextCtrl 3" );
 
-   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text",
+   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text 4",
                 wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , "wxTextCtrl 4" );
 
-   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text",
+   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text 5",
                 wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , "wxTextCtrl 5" );
 
-   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text",
+   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text 6",
                 wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , "wxTextCtrl 6" );
 
-   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text",
+   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text 7",
                 wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , "wxTextCtrl 7 (longer title)" );
    ctrl->SetPageToolTip(ctrl->GetPageCount()-1,
                         "wxTextCtrl 7: and the tooltip message can be even longer!");
 
-   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text",
+   ctrl->AddPage( new wxTextCtrl( ctrl, wxID_ANY, "Some more text 8",
                 wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , "wxTextCtrl 8" );
 
    // Create a split at the right border
-   wxAuiTabCtrl *tab2 = ctrl->Split(2, wxRIGHT);
+   wxAuiTabCtrl *tab3 = ctrl->Split(3, wxRIGHT);
 
-   // Another split at the right border after page 2
-   ctrl->Split(3, wxRIGHT);
+   // Another split at the right border after page 3
+   ctrl->Split(4, wxRIGHT);
 
-   // Move page 4 below page 2 (right side of 3)
-   ctrl->Split(4, wxDOWN, tab2);
+   // Move page 5 below page 3 (right side of 4)
+   ctrl->Split(5, wxDOWN, tab3);
 
-   // Page 5 to the bottom border below all others
-   ctrl->Split(5, wxDOWN);
+   // Page 6 to the bottom border below all others
+   ctrl->Split(6, wxDOWN);
 
-   // Now move page 6 next to page 2 tabctrl
+   // Now move page 5 next to page 3 tabctrl
    int sidx;
-   wxAuiTabCtrl *s = ctrl->FindTab(ctrl->GetPage(6), &sidx);
-   ctrl->MovePage(s, sidx, tab2);
+   wxAuiTabCtrl *s = ctrl->FindTab(ctrl->GetPage(7), &sidx);
+   ctrl->MovePage(s, sidx, tab3);
 
    ctrl->Thaw();
 

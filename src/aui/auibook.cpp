@@ -2456,7 +2456,7 @@ bool wxAuiNotebook::FindTab(wxWindow *page, wxAuiTabCtrl **ctrl, int *idx)
     return *ctrl != nullptr;
 }
 
-wxAuiTabCtrl *wxAuiNotebook::FindTab(wxWindow *page, int *idx)
+wxAuiTabCtrl *wxAuiNotebook::FindTab(wxWindow *page, int *idx, wxTabFrame **tabFrame)
 {
     wxAuiPaneInfoArray& all_panes = m_mgr.GetAllPanes();
     size_t i, pane_count = all_panes.GetCount();
@@ -2470,7 +2470,10 @@ wxAuiTabCtrl *wxAuiNotebook::FindTab(wxWindow *page, int *idx)
         int page_idx = tabframe->m_tabs->GetIdxFromWindow(page);
         if (page_idx != -1)
         {
-            if(idx)
+            if (tabFrame)
+                *tabFrame = tabframe;
+
+            if (idx)
                 *idx = page_idx;
 
             return tabframe->m_tabs;
@@ -2500,16 +2503,11 @@ void wxAuiNotebook::SwapTabControls(wxAuiTabCtrl *left, wxAuiTabCtrl *right)
         if (tabframe->m_tabs == left)
             leftInfo = &all_panes.Item(i);
         else if (tabframe->m_tabs == right)
-                rightInfo = &all_panes.Item(i);
+            rightInfo = &all_panes.Item(i);
     }
 
     if (leftInfo != nullptr && rightInfo != nullptr)
     {
-        wxWindow *tabframe = leftInfo->window;
-        leftInfo->window = rightInfo->window;
-        leftInfo->window = tabframe;
-
-        Update();
         m_mgr.Update();
     }
 }
@@ -2529,9 +2527,11 @@ wxAuiTabCtrl *wxAuiNotebook::Split(size_t page, int direction, wxAuiTabCtrl *ctr
 
     // find out which tab control the page currently belongs to
     wxAuiTabCtrl *src_tabs;
+    wxTabFrame *tabFrame;
+
     int src_idx = -1;
     src_tabs = NULL;
-    if ((src_tabs = FindTab(wnd, &src_idx)) == nullptr)
+    if ((src_tabs = FindTab(wnd, &src_idx, &tabFrame)) == nullptr)
         return nullptr;
     if (!src_tabs || src_idx == -1)
         return nullptr;
@@ -2586,7 +2586,7 @@ wxAuiTabCtrl *wxAuiNotebook::Split(size_t page, int direction, wxAuiTabCtrl *ctr
 
     if (direction == wxLEFT)
     {
-        paneInfo.Left();
+        paneInfo.Right();
 
         // First we split rightand then we swap the controls.
         // This is a workaround because we can not split in the left direction
@@ -2613,12 +2613,7 @@ wxAuiTabCtrl *wxAuiNotebook::Split(size_t page, int direction, wxAuiTabCtrl *ctr
 
     m_mgr.AddPane(new_tabs, paneInfo, targetPos);
     m_mgr.Update();
-
     MovePage(src_tabs, src_idx, dest_tabs, -1);
-
-    // This workaround is needed, because splitting to the left side doesn't work
-    if (direction == wxLEFT && !border)
-        SwapTabControls(src_tabs, dest_tabs);
 
     return dest_tabs;
 }
@@ -3597,6 +3592,23 @@ void wxAuiNotebook::UpdateTabRelations(vector<wxAuiLayoutInfo> &infos)
     }
 }
 
+wxTabFrame *wxAuiNotebook::NearestTabFrame(wxTabFrame *src, int direction)
+{
+    wxAuiPaneInfoArray &panes = m_mgr.GetAllPanes();
+    size_t pane_count = panes.GetCount();
+    for (size_t i = 0; i < pane_count; ++i)
+    {
+        if (panes.Item(i).name == wxT("dummy"))
+            continue;
+
+        wxTabFrame *tabFrame = (wxTabFrame *)panes.Item(i).window;
+        if (tabFrame == src)
+            continue;
+    }
+
+    return nullptr;
+}
+
 int32_t wxAuiNotebook::NearestTabCtrlIndex(wxAuiLayoutInfo const &ctrl, int direction, std::vector<wxAuiLayoutInfo> &infos)
 {
     wxPoint const &ctrlPos = ctrl.m_position;
@@ -3712,6 +3724,78 @@ int32_t wxAuiNotebook::NearestTabCtrlIndex(wxAuiLayoutInfo const &ctrl, int dire
     }
 
     return rc;
+}
+
+bool wxAuiNotebook::isNearestNeighbor(wxPoint &neighbor, wxPoint &src, wxPoint &nearest, int direction)
+{
+    switch (direction)
+    {
+        case wxLEFT:
+        {
+            if (src.y != src.y)
+                return false;
+
+            if (neighbor.x > src.x)
+            {
+                if ((nearest.x == -1 && nearest.y == -1) || src.x > nearest.x)
+                {
+                    nearest = neighbor;
+                    return true;
+                }
+            }
+        }
+        break;
+
+        case wxRIGHT:
+        {
+            if (neighbor.y != src.y)
+                return false;
+
+            if (neighbor.x < src.x)
+            {
+                if ((nearest.x == -1 && nearest.y == -1) || src.x < nearest.x)
+                {
+                    nearest = neighbor;
+                    return true;
+                }
+            }
+        }
+        break;
+
+        case wxUP:
+        {
+            if (neighbor.x != src.x)
+                return false;
+
+            if (neighbor.y > src.y)
+            {
+                if ((nearest.x == -1 && nearest.y == -1) || src.y > nearest.y)
+                {
+                    nearest = neighbor;
+                    return true;
+                }
+            }
+        }
+        break;
+
+        case wxDOWN:
+        {
+            if (neighbor.x != src.x)
+                return false;
+
+            if (neighbor.y < src.y)
+            {
+                if ((nearest.x == -1 && nearest.y == -1) || src.y < nearest.y)
+                {
+                    nearest = neighbor;
+                    return true;
+                }
+            }
+        }
+        break;
+    }
+
+    return false;
 }
 
 void wxAuiNotebook::MovePage(wxAuiTabCtrl *src, int tabPageIndex, wxAuiTabCtrl *dest, int pageIndex, bool select)

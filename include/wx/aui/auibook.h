@@ -29,7 +29,7 @@
 #include <set>
 
 class wxAuiNotebook;
-
+class wxTabFrame;
 
 enum wxAuiNotebookOption
 {
@@ -439,7 +439,7 @@ public:
     wxAuiTabCtrl* GetTabCtrlFromPoint(const wxPoint& pt);
     wxAuiTabCtrl* GetActiveTabCtrl();
     bool FindTab(wxWindow* page, wxAuiTabCtrl** ctrl, int* idx);
-    wxAuiTabCtrl *FindTab(wxWindow* page, int *idx = nullptr);
+    wxAuiTabCtrl *FindTab(wxWindow* page, int *idx = nullptr, wxTabFrame **tabFrame = nullptr);
 
     /**
      * Move the page from the source tab ctrl to the destination. If this was the last
@@ -507,6 +507,9 @@ protected:
      * If there is no tabctrl in the specified direction -1 is returned.
      */
     int32_t NearestTabCtrlIndex(wxAuiLayoutInfo const &ctrl, int direction, std::vector<wxAuiLayoutInfo> &tabInfos);
+    wxTabFrame *NearestTabFrame(wxTabFrame *src, int direction);
+
+    bool isNearestNeighbor(wxPoint &neighbor, wxPoint &src, wxPoint &nearest, int direction);
 
     std::vector<wxAuiLayoutInfo> GetTabControls(void);
 
