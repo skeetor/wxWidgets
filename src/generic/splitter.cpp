@@ -557,7 +557,7 @@ void wxSplitterWindow::DrawSashTracker(int x, int y)
 {
     int w, h;
     GetClientSize(&w, &h);
-
+	
     wxScreenDC screenDC;
     int x1, y1;
     int x2, y2;

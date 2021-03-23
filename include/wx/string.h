@@ -2132,6 +2132,11 @@ public:
       // insert a double into string
   wxString& operator<<(double d)
     { return (*this) << Format(wxT("%g"), d); }
+  // insert a pointer as hex into string
+  wxString &operator<<(void *p)
+  {
+      return (*this) << Format(wxT("%p"), p);
+  }
 
   // string comparison
     // case-sensitive comparison (returns a value < 0, = 0 or > 0)
@@ -2310,9 +2315,16 @@ public:
   // provided, the base is the numeric base in which the conversion should be
   // done and must be comprised between 2 and 36 or be 0 in which case the
   // standard C rules apply (leading '0' => octal, "0x" => hex)
-      // convert to a signed integer
+
+  // convert to a signed integer
+  bool ToInt(int *val, int base = 10) const;
+
+  // convert to an unsigned integer
+  bool ToUInt(unsigned int *val, int base = 10) const;
+
+  // convert to a signed long
   bool ToLong(long *val, int base = 10) const;
-      // convert to an unsigned integer
+      // convert to an unsigned long
   bool ToULong(unsigned long *val, int base = 10) const;
       // convert to wxLongLong
 #if defined(wxLongLong_t)

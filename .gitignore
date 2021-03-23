@@ -70,8 +70,6 @@
 /build/msw/*c*_mswuhdll_arm64
 /build/msw/wx_local.props
 
-/build/msw/*.vcproj.*.user
-/build/msw/*.vcxproj.user
 /build/msw/vc*_mswud
 /build/msw/wx_vc8arm_*.vcproj
 /build/msw/wx_vc8arm.sln
@@ -81,7 +79,9 @@
 /build/msw/*.VC.db
 /build/msw/*.VC.VC.opendb
 /build/msw/*.suo
-/build/msw/.vs/
+**/.vs/**
+**/*.vcproj.*.user
+**/*.vcxproj.user
 
 # /build/osx
 **/*.xcodeproj/*

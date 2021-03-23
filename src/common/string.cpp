@@ -1677,6 +1677,24 @@ int wxString::Find(wxUniChar ch, bool bFromEnd) const
     *pVal = val;                                                            \
     return !*end;
 
+bool wxString::ToInt(int *pVal, int base) const
+{
+    wxASSERT_MSG(!base || (base > 1 && base <= 36), wxT("invalid base"));
+
+    WX_STRING_TO_X_TYPE_START
+    int val = wxStrtol(start, &end, base);
+    WX_STRING_TO_X_TYPE_END
+}
+
+bool wxString::ToUInt(unsigned int *pVal, int base) const
+{
+    wxASSERT_MSG(!base || (base > 1 && base <= 36), wxT("invalid base"));
+
+    WX_STRING_TO_X_TYPE_START
+    unsigned int val = wxStrtoul(start, &end, base);
+    WX_STRING_TO_X_TYPE_END
+}
+
 bool wxString::ToLong(long *pVal, int base) const
 {
     wxASSERT_MSG( !base || (base > 1 && base <= 36), wxT("invalid base") );
