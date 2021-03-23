@@ -204,6 +204,14 @@
 #    define WXDLLIMPEXP_AUI
 #endif
 
+#ifdef WXMAKINGDLL_DOCKING
+#    define WXDLLIMPEXP_DOCKING WXEXPORT
+#elif defined(WXUSINGDLL)
+#    define WXDLLIMPEXP_DOCKING WXIMPORT
+#else /* not making nor using DLL */
+#    define WXDLLIMPEXP_DOCKING
+#endif
+
 #ifdef WXMAKINGDLL_PROPGRID
 #    define WXDLLIMPEXP_PROPGRID WXEXPORT
 #    define WXDLLIMPEXP_DATA_PROPGRID(type) WXEXPORT type
