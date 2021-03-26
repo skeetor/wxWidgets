@@ -1,0 +1,10 @@
+#include "../sample.rc"
+
+New BITMAP "bitmaps/new.bmp"
+Open BITMAP "bitmaps/open.bmp"
+Save BITMAP "bitmaps/save.bmp"
+Copy BITMAP "bitmaps/copy.bmp"
+Cut BITMAP "bitmaps/cut.bmp"
+Paste BITMAP "bitmaps/paste.bmp"
+Help BITMAP "bitmaps/help.bmp"
+

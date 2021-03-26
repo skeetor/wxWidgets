@@ -37,7 +37,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\sample.rc">
+    <ResourceCompile Include="docking.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -52,6 +52,9 @@
       <Filter>Header Files\docking</Filter>
     </ClInclude>
     <ClInclude Include="include\wx\docking\dockingpanel.h">
+      <Filter>Header Files\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="include\wx\docking\dockinginfo.h">
       <Filter>Header Files\docking</Filter>
     </ClInclude>
   </ItemGroup>

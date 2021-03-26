@@ -450,7 +450,7 @@ public:
         { Init(keyType); }
     virtual ~wxListBase();
 
-    // accessors
+    // accessors$
         // count of items in the list
     size_t GetCount() const { return m_count; }
 

@@ -1,5 +1,4 @@
-#ifndef _WX_DOCKINGPANEL_H_
-#define _WX_DOCKINGPANEL_H_
+#pragma once
 
 #include "wx/defs.h"
 
@@ -8,6 +7,8 @@
 #include <wx/panel.h>
 #include <wx/splitter.h>
 #include <wx/notebook.h>
+#include <wx/toolbar.h>
+#include <wx/docking/dockingframe.h>
 
 #include <wx/docking/docking_defs.h>
 
@@ -17,9 +18,10 @@ class wxDockingFrame;
  * It can have the following states:
  *    - Floating: It shows at least one panel in a seperate window
  *    - Tabbed: It shows one or more panels
- *    - Splitted: It shows tww panels.
+ *    - Splitted: It shows two panels.
+ *    - User: This view represents a user panel
  * 
- * A single instance of wxDockingPanel, can only be splitted or tabbed.
+ * Any single instance of wxDockingPanel can only be in one state.
  */
 class WXDLLIMPEXP_DOCKING wxDockingPanel
 : public wxPanel
@@ -39,45 +41,68 @@ public:
 
 	~wxDockingPanel() override;
 
-	wxString const &getTitle(void) const { return m_title; }
-	void setTitle(wxString const &title) { m_title = title;  }
+	wxString const &GetTitle(void) const { return m_title; }
+	void SetTitle(wxString const &title) { m_title = title; }
 
 	bool isFloating(void) const { return m_floating; }
 	bool isSplitted(void) const { return m_splitted; }
 	bool isTabbed(void) const { return m_tabbed; }
-	bool isUser(void) const { return !m_tabbed && !m_splitted; }
+	bool isUser(void) const { return m_window; }
 
 protected:
 	void OnSize(wxSizeEvent &event);
 
 protected: // API
-
-	wxWindow *getUserPanel(void) const { return (!m_tabbed && !m_splitted) ? m_panel : nullptr; }
-	void setUserPanel(wxWindow *panel)
+	wxWindow *GetUserPanel(void) const { return (m_window) ? m_panel : nullptr; }
+	void SetUserPanel(wxWindow *panel)
 	{
 		m_panel = panel;
-		m_splitted = false;
-		m_tabbed = false;
+		initFlags();
+		m_window = true;
 	}
 
-	wxSplitterWindow *getSplitter(void) const { return (m_splitted) ? m_splitter : nullptr; }
-	void setSplitter(wxSplitterWindow *splitter)
+	wxSplitterWindow *GetSplitter(void) const { return (m_splitted) ? m_splitter : nullptr; }
+	void SetSplitter(wxSplitterWindow *splitter)
 	{
 		m_splitter = splitter;
+		initFlags();
 		m_splitted = true;
-		m_tabbed = false;
 	}
 
-	wxNotebook *getNotebook(void) const { return (m_tabbed) ? m_notebook : nullptr; }
-	void setNotebook(wxNotebook *notebook)
+	wxNotebook *GetNotebook(void) const { return (m_tabbed) ? m_notebook : nullptr; }
+	void SetNotebook(wxNotebook *notebook)
 	{
 		m_notebook = notebook;
-		m_splitted = false;
+		initFlags();
 		m_tabbed = true;
+	}
+
+	wxDockingFrame *GetFloatingWindow(void) const { return (m_floating) ? m_frame : nullptr; }
+	void SetFloatingWindow(wxDockingFrame *panel)
+	{
+		m_frame = panel;
+		initFlags();
+		m_floating = true;
+	}
+
+	wxToolBar *GetToolbar(void) const { return (m_toolbar) ? m_toolbarWindow : nullptr; }
+	void SetToolbar(wxToolBar *toolbar)
+	{
+		m_toolbarWindow = toolbar;
+		initFlags();
+		m_toolbar = true;
 	}
 
 private:
 	void init(wxString const &title = "");
+	void initFlags(void)
+	{
+		m_window = false;
+		m_floating = false;
+		m_splitted = false;
+		m_tabbed = false;
+		m_toolbar = false;
+	}
 
 private:
 	union
@@ -85,11 +110,16 @@ private:
 		wxWindow *m_panel;
 		wxSplitterWindow *m_splitter;
 		wxNotebook *m_notebook;
+		wxDockingFrame *m_frame;
+		wxToolBar *m_toolbarWindow;
 	};
+
 	wxString m_title;
+	bool m_window : 1;
 	bool m_floating : 1;
 	bool m_splitted : 1;
 	bool m_tabbed : 1;
+	bool m_toolbar : 1;
 
 	wxDECLARE_EVENT_TABLE();
 	// We don't allow copying because we need to keep track of the panels.
@@ -97,5 +127,3 @@ private:
 };
 
 #endif // wxUSE_DOCKING
-
-#endif // _WX_DOCKINGFRAME_H_

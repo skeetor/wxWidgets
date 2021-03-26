@@ -370,6 +370,9 @@
       <OutputFile>vc_mswud_x64\docking_vc9.bsc</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
+    <Manifest>
+      <AdditionalManifestFiles>.\..\..\include\wx\msw\amd64_dpi_aware.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -411,6 +414,9 @@
       <OutputFile>vc_mswu_x64\docking_vc9.bsc</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
+    <Manifest>
+      <AdditionalManifestFiles>.\..\..\include\wx\msw\amd64_dpi_aware.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DLL Debug|x64'">
     <Midl>
@@ -452,6 +458,9 @@
       <OutputFile>vc_mswuddll_x64\docking_vc9.bsc</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
+    <Manifest>
+      <AdditionalManifestFiles>.\..\..\include\wx\msw\amd64_dpi_aware.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DLL Release|x64'">
     <Midl>
@@ -493,6 +502,9 @@
       <OutputFile>vc_mswudll_x64\docking_vc9.bsc</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
+    <Manifest>
+      <AdditionalManifestFiles>.\..\..\include\wx\msw\amd64_dpi_aware.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dockingdemo.cpp" />
@@ -500,11 +512,12 @@
     <ClCompile Include="docking\dockingpanel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\sample.rc" />
+    <ResourceCompile Include="docking.rc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\wx\docking\docking.h" />
     <ClInclude Include="include\wx\docking\dockingframe.h" />
+    <ClInclude Include="include\wx\docking\dockinginfo.h" />
     <ClInclude Include="include\wx\docking\dockingpanel.h" />
     <ClInclude Include="include\wx\docking\docking_defs.h" />
   </ItemGroup>

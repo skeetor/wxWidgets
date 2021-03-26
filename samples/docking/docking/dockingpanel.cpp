@@ -1,3 +1,5 @@
+#if wxUSE_DOCKING
+
 #include <wx/docking/dockingpanel.h>
 
 wxIMPLEMENT_DYNAMIC_CLASS(wxDockingPanel, wxPanel);
@@ -31,9 +33,7 @@ void wxDockingPanel::init(wxString const &title)
 {
 	m_title = title;
 	m_panel = nullptr;
-	m_floating = false;
-	m_splitted = false;
-	m_tabbed = false;
+	initFlags();
 }
 
 void wxDockingPanel::OnSize(wxSizeEvent &event)
@@ -45,3 +45,5 @@ void wxDockingPanel::OnSize(wxSizeEvent &event)
 
 	event.Skip();
 }
+
+#endif // wxUSE_DOCKING
