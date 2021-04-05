@@ -509,6 +509,7 @@
   <ItemGroup>
     <ClCompile Include="dockingdemo.cpp" />
     <ClCompile Include="docking\dockingframe.cpp" />
+    <ClCompile Include="docking\dockinginfo.cpp" />
     <ClCompile Include="docking\dockingpanel.cpp" />
   </ItemGroup>
   <ItemGroup>

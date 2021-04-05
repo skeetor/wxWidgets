@@ -5,61 +5,105 @@
 #if wxUSE_DOCKING
 
 #include <wx/string.h>
+#include <wx/gdicmn.h>
 
 class wxDockingPanel;
 class wxDockingFrame;
 
-class wxDockingInfo
+class WXDLLIMPEXP_DOCKING wxDockingInfo
 {
 	friend wxDockingFrame;
 
 public:
-	wxDockingInfo(wxString const &title = "")
-	: m_title(title)
-	, m_dockingPanel(nullptr)
-	, m_direction(wxCENTRAL)
-	, m_horizontal(true)
-	{
-	}
-
+	wxDockingInfo(wxString const &title = "");
 	~wxDockingInfo()
 	{
 	}
 
+	/**
+	 * Make this the default instance.
+	 */
+	wxDockingInfo &defaults(void) { m_default = this; return *this; }
+
 	wxDockingInfo &title(wxString const &title) { m_title = title; return *this; }
+	wxString const &title() const { return m_title; }
 	wxDockingInfo &dock(wxDockingPanel *dockingPanel) { m_dockingPanel = dockingPanel; return *this; }
+	wxDockingPanel *dock(void) const { return m_dockingPanel; }
 
 	wxDockingInfo &center(void) { m_direction = wxCENTRAL; return *this; }
-	bool isCenter(void) { return m_direction == wxCENTRAL; }
+	bool isCenter(void) const { return m_direction == wxCENTRAL; }
 	wxDockingInfo &up(void) { m_direction = wxUP; return *this; }
-	bool isUp(void) { return m_direction == wxUP; }
+	bool isUp(void) const { return m_direction == wxUP; }
 	wxDockingInfo &down(void) { m_direction = wxDOWN; return *this; }
-	bool isDown(void) { return m_direction == wxDOWN; }
+	bool isDown(void) const { return m_direction == wxDOWN; }
 	wxDockingInfo &left(void) { m_direction = wxLEFT; return *this; }
-	bool isLeft(void) { return m_direction == wxLEFT; }
+	bool isLeft(void) const { return m_direction == wxLEFT; }
 	wxDockingInfo &right(void) { m_direction = wxRIGHT; return *this; }
-	bool isRight(void) { return m_direction == wxRIGHT; }
+	bool isRight(void) const { return m_direction == wxRIGHT; }
 	wxDockingInfo &top(void) { m_direction = wxTOP; return *this; }
-	bool isTop(void) { return m_direction == wxTOP; }
+	bool isTop(void) const { return m_direction == wxTOP; }
 	wxDockingInfo &bottom(void) { m_direction = wxBOTTOM; return *this; }
-	bool isBottom(void) { return m_direction == wxBOTTOM; }
+	bool isBottom(void) const { return m_direction == wxBOTTOM; }
+	wxDirection direction(void) const { return m_direction; }
+
+	wxDockingInfo &tabstyleLeft(void) { m_nbTabStyle = wxLEFT; return *this; }
+	bool isTabstyleLeft(void) const { return m_nbTabStyle == wxLEFT; }
+	wxDockingInfo &tabstyleRight(void) { m_nbTabStyle = wxRIGHT; return *this; }
+	bool isTabstyleRight(void) const { return m_nbTabStyle == wxRIGHT; }
+	wxDockingInfo &tabstyleTop(void) { m_nbTabStyle = wxTOP; return *this; }
+	bool isTabstyleTop(void) const { return m_nbTabStyle == wxTOP; }
+	wxDockingInfo &tabstyleBottom(void) { m_nbTabStyle = wxBOTTOM; return *this; }
+	bool isTabstyleBottom(void) const { return m_nbTabStyle == wxBOTTOM; }
+	long tabStyle(void) const;
+
+	/**
+	 * If a window is added to an empty docking panel as center(), it will be
+	 * added as a normal window. If this is not desired, the showTab() option
+	 * will create a tab even for the first window.
+	 */
+	wxDockingInfo &showTab(bool show) { m_showTab = show; return *this; }
+	bool showTab(void) const { return m_showTab; }
 
 	// Toolbars
-	wxDockingInfo &horizontal(bool top = true) { m_horizontal = true; (top) ? m_direction = wxTOP : m_direction = wxBOTTOM; return *this; }
-	bool isHorizontal(void) const { return m_horizontal; }
+	wxDockingInfo &toolbarTop(void) { m_horizontal = true; m_direction = wxTOP; return *this; }
+	bool isToolbarTop(void) const { return m_horizontal == true && m_direction == wxTOP; }
+	wxDockingInfo &toolbarBottom(void) { m_horizontal = true; m_direction = wxBOTTOM; return *this; }
+	bool isToolbarBottom(void) const { return m_horizontal == true && m_direction == wxBOTTOM; }
 
-	wxDockingInfo &vertical(bool left = true) { m_horizontal = false; (left) ? m_direction = wxLEFT : m_direction = wxRIGHT; return *this; }
-	bool isVertical(void) const { return !m_horizontal; }
+	wxDockingInfo &toolbarLeft(void) { m_horizontal = false; m_direction = wxLEFT; return *this; }
+	bool isToolbarLeft(void) const { return m_horizontal == false && m_direction == wxLEFT; }
+	wxDockingInfo &toolbarRight(void) { m_horizontal = false; m_direction = wxRIGHT; return *this; }
+	bool isToolbarRight(void) const { return m_horizontal == false && m_direction == wxRIGHT; }
+
+	bool isToolbarHorizontal(void) const { return m_horizontal; }
+	bool isToolbarVertical(void) const { return !m_horizontal; }
+
+	// Toolbar/Floating
+	wxDockingInfo &position(wxPoint &point) { m_point = point; return *this; }
+	wxPoint position(void) const { return m_point; }
+
+	wxDockingInfo &size(wxSize &size) { m_size = size; return *this; }
+	wxSize size(void) const { return m_size; }
 
 private:
-	wxString m_title;
+	static wxDockingInfo *m_default;
+
 	wxDockingPanel *m_dockingPanel;
+	wxString m_title;
 
 	// Splitting
 	wxDirection m_direction;
 
+	wxDirection m_nbTabStyle;
+
 	// Toolbars
 	bool m_horizontal:1;
+
+	// Toolbar/Floating
+	wxPoint m_point;
+	wxSize m_size;
+
+	bool m_showTab : 1;
 };
 
 #endif // wxUSE_DOCKING

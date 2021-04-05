@@ -14,8 +14,8 @@ wxDockingPanel::wxDockingPanel()
 }
 
 wxDockingPanel::wxDockingPanel(wxWindow *parent,
-	wxWindowID id,
 	wxString const &title,
+	wxWindowID id,
 	const wxPoint &pos,
 	const wxSize &size,
 	long style,
@@ -31,9 +31,16 @@ wxDockingPanel::~wxDockingPanel()
 
 void wxDockingPanel::init(wxString const &title)
 {
+	m_type = wxDOCKING_NONE;
 	m_title = title;
-	m_panel = nullptr;
-	initFlags();
+	m_userWindow = nullptr;
+}
+
+void wxDockingPanel::TakeDocking(wxDockingPanel const &source)
+{
+	m_title = source.m_title;
+	m_userWindow = source.m_userWindow;
+	m_type = source.m_type;
 }
 
 void wxDockingPanel::OnSize(wxSizeEvent &event)

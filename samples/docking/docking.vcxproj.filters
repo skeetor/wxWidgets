@@ -35,6 +35,9 @@
     <ClCompile Include="docking\dockingpanel.cpp">
       <Filter>Source Files\docking</Filter>
     </ClCompile>
+    <ClCompile Include="docking\dockinginfo.cpp">
+      <Filter>Source Files\docking</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="docking.rc">

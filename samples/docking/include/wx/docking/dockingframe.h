@@ -50,14 +50,41 @@ public:
 		long style = wxDEFAULT_FRAME_STYLE,
 		const wxString &name = wxASCII_STR(wxFrameNameStr));
 
+	wxDockingInfo &Defaults(void) { return m_defaults; }
+	wxDockingInfo const &Defaults(void) const { return m_defaults; }
+
+	/**
+	 * Find the wxDockingPanel where the specified window resides in. If the window
+	 * is already a wxDockingPanel, then this is returned.
+	 */
+	wxDockingPanel *FindDockingParent(wxWindow *window) const;
+
+	/**
+	 * Return the tab panel associated with this window.
+	 * If no tab panel is found, a nullpointer is returned. If the window itself is a
+	 * tab panel, then this is returned.
+	 */
+	wxDockingPanel *FindTabParent(wxWindow *window) const;
+
+	/**
+	 * Find the tab parent for the current window, only if it is a direct descendant
+	 * of a tab panel.
+	 */
+	wxDockingPanel *FindDirectTabParent(wxWindow *window) const;
+
 	/**
 	 * The rootPanel holds the panel, which is directly parented to the wxDockingFrame.
 	 * This may change, depending on the layout requirements, so this pointer may not be
-	 * held outside this class. This pointer will never be null.
+	 * held after the layout has been modified. This pointer will never be null.
 	 * After a call to any of the layout functions like AddPanel, TabifyPanel, etc. it is not
 	 * guaranteed that this pointer is still valid, or that it still points to the same content.
 	 */
-	wxDockingPanel *GetRootPanel(void) const { return m_rootPanel;  }
+	wxDockingPanel *GetRootPanel(void) const { return m_rootPanel; }
+
+	/**
+	 * Returns the currently active panel. This might be a nullptr if no panel is active.
+	 */
+	wxDockingPanel *GetActivePanel(void) const { return m_activePanel; }
 
 	/**
 	 * Add the panel relative to the specified panel in the given direction.
@@ -73,12 +100,16 @@ public:
 	 * If successfull, the dockingpanel which it is attached to is returned,
 	 * otherwise a nullptr.
 	 */
-	wxDockingPanel *AddPanel(wxWindow *panel, wxDockingInfo const &info);
+	wxDockingPanel *AddPanel(wxWindow *panel, wxDockingInfo const &info, wxDockingPanel **notebook = nullptr);
 
 	/**
-	 * Add the panel to a tab in the dockiongPanel. If the dockingPanel doesn't have tabs, it will be converted accordingly. 
+	 * Add the panel to a tab in the dockiongPanel. If the dockingPanel doesn't
+	 * have tabs, it will be converted accordingly.
+	 * If the notebook pointer is provided, the notebook will be returned as
+	 * well. If showTab() is not set in the info and it is the first panel,
+	 * then no tab is created and this pointer will be null.
 	 */
-	wxDockingPanel *TabbedPanel(wxWindow *panel, wxDockingInfo const &info);
+	wxDockingPanel *AddTabPanel(wxWindow *panel, wxDockingInfo const &info, wxDockingPanel **notebook = nullptr);
 
 	/**
 	 * Split the dockingPanel and add the panel in the specified direction.
@@ -100,7 +131,7 @@ public:
 	 * is still associated to the frame, and can be shown again. It may not be
 	 * reattached by AddToolBar().
 	 */
-	wxDockingPanel *HideToolBar(wxDockingPanel *toolbar, wxDockingInfo const &info);
+	wxDockingPanel *HideToolBar(wxToolBar *toolbar, wxDockingInfo const &info);
 
 	/**
 	 * ReoveToolbar will detach the toolbar from the frame. After this, the toolbar
@@ -108,17 +139,9 @@ public:
 	 * the toolbar. After this the toolbar has to be reattached by using AddToolBar()
 	 * if desired.
 	 */
-	bool RemoveToolBar(wxDockingPanel *toolbar, wxDockingInfo const &info);
+	bool RemoveToolBar(wxToolBar *toolbar, wxDockingInfo const &info);
 
-	/**
-	 * Convert the dockingPanel to floating. If it is part of another dockingPanel it will be removed from it.
-	 */
-	wxDockingPanel *FloatPanel(wxDockingPanel *panel);
-
-	/**
-	 * Find the wxDockingPanel where the specified window resides in.
-	 */
-	wxDockingPanel *FindDockingPanel(wxWindow *window) const;
+	void SetActivePanel(wxDockingPanel *panel);
 
 	/**
 	 * Serialize the current layout to a string, which allows to restore this layout later.
@@ -145,17 +168,22 @@ public:
 	//bool DeserializeFrame(wxString layout);
 
 protected:
-	void OnChildFocus(wxChildFocusEvent &event);
+	void OnMouseLeftDown(wxMouseEvent &event);
 
 	void UpdateToolbarLayout(void);
 	bool HideToolbar(wxDockingPanel *&toolbar);
 
 private:
 	void init(void);
+	void BindEventHandlers(void);
+	void UnbindEventHandlers(void);
 
 private:
 	wxDockingPanel *m_rootPanel;
 	wxDockingPanel *m_activePanel;
+
+	// Some values are used as defaults if not specified in a function.
+	wxDockingInfo m_defaults;
 
 	// Toolbar members
 	wxGridBagSizer *m_sizer;
@@ -164,7 +192,6 @@ private:
 	wxDockingPanel *m_toolbarsTop;
 	wxDockingPanel *m_toolbarsBottom;
 
-	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_DYNAMIC_CLASS(wxDockingFrame);
 };
 
