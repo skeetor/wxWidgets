@@ -599,8 +599,33 @@ void MyFrame::OnNewPanel(wxCommandEvent &event)
 	AddPanel(createSizeReportCtrl(title), info);
 }
 
-void MyFrame::OnNewPanelBorder(wxCommandEvent &)
+void MyFrame::OnNewPanelBorder(wxCommandEvent &event)
 {
+	wxString title = "New Borderpanel: ";
+	title << ++m_newPanel;
+	wxDockingInfo info(title);
+	info.dock(nullptr);// Not needed, but we set it explicitly as a demonstration
+
+	switch (event.GetId())
+	{
+		case ID_LayoutSplitLeftBorder:
+		info.left();
+		break;
+
+		case ID_LayoutSplitRightBorder:
+		info.right();
+		break;
+
+		case ID_LayoutSplitTopBorder:
+		info.up();
+		break;
+
+		case ID_LayoutSplitBottomBorder:
+		info.down();
+		break;
+	}
+
+	SplitPanel(createSizeReportCtrl(title), info);
 }
 
 void MyFrame::createInitialLayout(void)

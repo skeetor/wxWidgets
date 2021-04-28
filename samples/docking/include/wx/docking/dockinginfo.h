@@ -30,6 +30,9 @@ public:
 	wxDockingInfo &dock(wxDockingPanel *dockingPanel) { m_dockingPanel = dockingPanel; return *this; }
 	wxDockingPanel *dock(void) const { return m_dockingPanel; }
 
+	bool isActive(void) const { return m_activate; }
+	void activate(bool activate = true) { m_activate = activate; }
+
 	wxDockingInfo &center(void) { m_direction = wxCENTRAL; return *this; }
 	bool isCenter(void) const { return m_direction == wxCENTRAL; }
 	wxDockingInfo &up(void) { m_direction = wxUP; return *this; }
@@ -55,14 +58,6 @@ public:
 	wxDockingInfo &tabstyleBottom(void) { m_nbTabStyle = wxBOTTOM; return *this; }
 	bool isTabstyleBottom(void) const { return m_nbTabStyle == wxBOTTOM; }
 	long tabStyle(void) const;
-
-	/**
-	 * If a window is added to an empty docking panel as center(), it will be
-	 * added as a normal window. If this is not desired, the showTab() option
-	 * will create a tab even for the first window.
-	 */
-	wxDockingInfo &showTab(bool show) { m_showTab = show; return *this; }
-	bool showTab(void) const { return m_showTab; }
 
 	// Toolbars
 	wxDockingInfo &toolbarTop(void) { m_horizontal = true; m_direction = wxTOP; return *this; }
@@ -103,7 +98,7 @@ private:
 	wxPoint m_point;
 	wxSize m_size;
 
-	bool m_showTab : 1;
+	bool m_activate;
 };
 
 #endif // wxUSE_DOCKING

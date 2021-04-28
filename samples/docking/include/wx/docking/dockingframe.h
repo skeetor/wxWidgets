@@ -168,6 +168,15 @@ public:
 	//bool DeserializeFrame(wxString layout);
 
 protected:
+	/**
+	 * Create a wxNotebook tab panel with the userWindow as it's page. If the userWindow is
+	 * a wxNotebook it will not create a new one, instead it adds the userWindow to it. If the
+	 * parent is a nullpointer the parent of the user window will be used as the parent for the
+	 * wxDockingTarget. If the info doesn't contain a docking target, a new wxDockingPanel will
+	 * be created.
+	 */
+	wxDockingPanel *CreateTabPanel(wxWindow *userWindow, wxDockingInfo const &info, wxWindow*parent = nullptr);
+
 	void OnMouseLeftDown(wxMouseEvent &event);
 
 	void UpdateToolbarLayout(void);

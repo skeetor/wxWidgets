@@ -65,6 +65,7 @@ public:
 	bool isPanel(void) const { return m_type == wxDOCKING_PANEL; }
 
 	wxWindow *GetWindow(void) const { return m_userWindow; }
+	void ClearWindow(void) { m_userWindow = nullptr; m_type = wxDOCKING_NONE; }
 
 	wxDockingPanel *GetDockingPanel(void) const { return (isPanel()) ? m_dockingPanel : nullptr; }
 	wxWindow *GetUserWindow(void) const { return (isUser()) ? m_userWindow : nullptr; }

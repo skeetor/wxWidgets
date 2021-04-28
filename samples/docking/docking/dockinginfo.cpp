@@ -11,13 +11,12 @@ wxDockingInfo::wxDockingInfo(wxString const &title)
 , m_horizontal(true)
 , m_point(wxDefaultPosition)
 , m_size(wxDefaultSize)
-, m_showTab(false)
+, m_activate(false)
 {
 	// Override default settings if available
 	if (m_default)
 	{
 		m_nbTabStyle = m_default->m_nbTabStyle;
-		m_showTab = m_default->m_showTab;
 	}
 }
 
