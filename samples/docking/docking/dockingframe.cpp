@@ -204,13 +204,17 @@ wxDockingPanel *wxDockingFrame::AddTabPanel(wxWindow *panel, wxDockingInfo const
 	nb = dockingPanel->GetNotebook();
 	if (!nb)
 	{
+		wxWindow *dpw = dockingPanel->GetWindow();
+
 		// If the dockingpanel holds a window, then we need to create a notebook
-		// so we can attech the new one as well. The current window is added as
+		// so we can attach the new one as well. The current window is added as
 		// the first page, before the new panel is added.
-		if (info.showTab() || dockingPanel->GetWindow())
+		if (info.showTab() || dpw)
 		{
+			wxSplitterWindow *spw = dockingPanel->GetSplitter();
+
 			nb = new wxNotebook(dockingPanel, wxID_ANY, wxDefaultPosition, info.size(), info.tabStyle());
-			if (dockingPanel->GetWindow())
+			if (dpw)
 			{
 				wxDockingPanel *dp = new wxDockingPanel(nb, dockingPanel->GetTitle());
 				dp->TakeDocking(dockingPanel);
@@ -264,14 +268,16 @@ wxDockingPanel *wxDockingFrame::SplitPanel(wxWindow *panel, wxDockingInfo const 
 	dp1->TakeDocking(dockingPanel);
 	existingWindow->Reparent(dp1);
 	splitter->SetSize(sz);
+	dockingPanel->SetSplitter(splitter);
 
 	// If the tab was converted to a notebook, this will be our docking target
 	// otherwise it is just the panel itself.
 	wxDockingInfo child(info);
-	child.dock(dp1);
-	wxDockingPanel *childPanel = AddTabPanel(panel, info, &dp2);
+	child.dock(dockingPanel);
+	wxDockingPanel *childPanel = AddTabPanel(panel, child, &dp2);
 	if (!dp2)
 		dp2 = childPanel;
+
 	result = dp2;
 
 	wxDirection direction = info.direction();
@@ -291,7 +297,6 @@ wxDockingPanel *wxDockingFrame::SplitPanel(wxWindow *panel, wxDockingInfo const 
 		uint32_t pos = sz.y / 2;
 		splitter->SplitHorizontally(dp1, dp2, pos);
 	}
-	dockingPanel->SetSplitter(splitter);
 
 	SetActivePanel(result);
 
