@@ -204,6 +204,7 @@ wxDockingPanel *wxDockingFrame::AddTabPanel(wxWindow *panel, wxDockingInfo const
 	nb = dockingPanel->GetNotebook();
 	if (!nb)
 	{
+		wxDockingPanel *dp = nullptr;
 		wxWindow *dpw = dockingPanel->GetWindow();
 
 		// If the dockingpanel holds a window, then we need to create a notebook
@@ -211,16 +212,25 @@ wxDockingPanel *wxDockingFrame::AddTabPanel(wxWindow *panel, wxDockingInfo const
 		// the first page, before the new panel is added.
 		if (info.showTab() || dpw)
 		{
-			wxSplitterWindow *spw = dockingPanel->GetSplitter();
+			// If we have a nullptr (first root window) or a splitter, we
+			// need to create a new dockingPanel
+			if (!dpw)
+				dp = new wxDockingPanel(dockingPanel, dockingPanel->GetTitle());
 
-			nb = new wxNotebook(dockingPanel, wxID_ANY, wxDefaultPosition, info.size(), info.tabStyle());
-			if (dpw)
+			if (!dp)
 			{
-				wxDockingPanel *dp = new wxDockingPanel(nb, dockingPanel->GetTitle());
-				dp->TakeDocking(dockingPanel);
+				wxSplitterWindow *spw = dockingPanel->GetSplitter();
+				if (spw)
+					dp = new wxDockingPanel(spw, dockingPanel->GetTitle());
+			}
+
+			nb = new wxNotebook(dp, wxID_ANY, wxDefaultPosition, info.size(), info.tabStyle());
+
+/*			if (dpw)
+			{
 				dp->GetWindow()->Reparent(dp);
 				nb->AddPage(dp, dp->GetTitle(), true);
-			}
+			}*/
 
 			nb->SetSize(sz);
 
