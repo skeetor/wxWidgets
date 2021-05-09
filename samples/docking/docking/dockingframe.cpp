@@ -222,21 +222,23 @@ wxDockingPanel *wxDockingFrame::AddTabPanel(wxWindow *panel, wxDockingInfo const
 				wxSplitterWindow *spw = dockingPanel->GetSplitter();
 				if (spw)
 					dp = new wxDockingPanel(spw, dockingPanel->GetTitle());
+				else
+					dp = dockingPanel;
 			}
 
 			nb = new wxNotebook(dp, wxID_ANY, wxDefaultPosition, info.size(), info.tabStyle());
-
-/*			if (dpw)
-			{
-				dp->GetWindow()->Reparent(dp);
-				nb->AddPage(dp, dp->GetTitle(), true);
-			}*/
-
 			nb->SetSize(sz);
 
-			dockingPanel->SetNotebook(nb);
-			dockingPanel->SetTitle(info.title());
-			*notebook = dockingPanel;
+			if (dockingPanel->isUser())
+			{
+				dp = dockingPanel;
+				dpw->Reparent(nb);
+				nb->AddPage(dpw, dp->GetTitle(), true);
+			}
+
+			dp->SetNotebook(nb);
+			dp->SetTitle(info.title());
+			*notebook = dp;
 			parent = nb;
 		}
 	}

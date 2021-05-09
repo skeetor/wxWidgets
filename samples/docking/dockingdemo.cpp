@@ -613,7 +613,7 @@ void MyFrame::createInitialLayout(void)
 		.tabstyleTop()
 
 		// Always create a tab, even if there is only one window
-		//.showTab(true)
+		.showTab(true)
 	;
 
 	// When the frame is opened, it is recommended to add toolbars before anything else. Otherwise
