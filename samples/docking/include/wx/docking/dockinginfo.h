@@ -56,14 +56,6 @@ public:
 	bool isTabstyleBottom(void) const { return m_nbTabStyle == wxBOTTOM; }
 	long tabStyle(void) const;
 
-	/**
-	 * If a window is added to an empty docking panel as center(), it will be
-	 * added as a normal window. If this is not desired, the showTab() option
-	 * will create a tab even for the first window.
-	 */
-	wxDockingInfo &showTab(bool show) { m_showTab = show; return *this; }
-	bool showTab(void) const { return m_showTab; }
-
 	// Toolbars
 	wxDockingInfo &toolbarTop(void) { m_horizontal = true; m_direction = wxTOP; return *this; }
 	bool isToolbarTop(void) const { return m_horizontal == true && m_direction == wxTOP; }
@@ -102,8 +94,6 @@ private:
 	// Toolbar/Floating
 	wxPoint m_point;
 	wxSize m_size;
-
-	bool m_showTab : 1;
 };
 
 #endif // wxUSE_DOCKING
