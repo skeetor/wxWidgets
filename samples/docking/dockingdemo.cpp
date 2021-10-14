@@ -162,6 +162,7 @@ enum
 	ID_LayoutSplitRightBorder,
 	ID_LayoutSplitTopBorder,
 	ID_LayoutSplitBottomBorder,
+	ID_LayoutRemoveDockedPanel,
 
 	ID_ToolbarLeftAdd,
 	ID_ToolbarRightAdd,
@@ -172,6 +173,7 @@ enum
 	ID_ToolbarRightRemove,
 	ID_ToolbarTopRemove,
 	ID_ToolbarBottomRemove,
+
 };
 
 class MyFrame : public wxDockingFrame
@@ -193,6 +195,7 @@ public:
 	void OnLayoutSerialize(wxCommandEvent &evt);
 	void OnLayoutDeserialize(wxCommandEvent &evt);
 	void OnLayoutCopySerialize(wxCommandEvent &evt);
+	void OnLayoutRemoveDockingPanel(wxCommandEvent &evt);
 
 	void OnToolbar(wxCommandEvent &evt);
 	wxToolBar *CreateDockingToolbar(bool top, bool left, wxDockingInfo &info);
@@ -243,6 +246,7 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxDockingFrame)
 	EVT_MENU(ID_LayoutSplitRightBorder, MyFrame::OnNewPanelBorder)
 	EVT_MENU(ID_LayoutSplitTopBorder, MyFrame::OnNewPanelBorder)
 	EVT_MENU(ID_LayoutSplitBottomBorder, MyFrame::OnNewPanelBorder)
+	EVT_MENU(ID_LayoutRemoveDockedPanel, MyFrame::OnLayoutRemoveDockingPanel)
 
 
 	EVT_MENU(ID_ToolbarLeftAdd, MyFrame::OnToolbar)
@@ -326,6 +330,7 @@ wxMenu *MyFrame::createDockingMenu(void)
 	submenu->Append(new wxMenuItem(submenu, ID_LayoutSplitTopBorder, wxString(wxT("Top")), wxEmptyString, wxITEM_NORMAL));
 	submenu->Append(new wxMenuItem(submenu, ID_LayoutSplitBottomBorder, wxString(wxT("Bottom")), wxEmptyString, wxITEM_NORMAL));
 	menu->Append(new wxMenuItem(menu, wxID_ANY, wxT("Split to border"), wxEmptyString, wxITEM_NORMAL, submenu));
+	menu->Append(new wxMenuItem(menu, ID_LayoutRemoveDockedPanel, wxString(wxT("Remove docked panel")), wxEmptyString, wxITEM_NORMAL));
 	menu->AppendSeparator();
 	menu->Append(new wxMenuItem(submenu, ID_LayoutCopySerialize, wxString(wxT("Copy layout to Clipboard")), wxEmptyString, wxITEM_NORMAL));
 	menu->Append(new wxMenuItem(submenu, ID_LayoutSerialize, wxString(wxT("Save layout")), wxEmptyString, wxITEM_NORMAL));
@@ -628,6 +633,7 @@ void MyFrame::OnNewPanelBorder(wxCommandEvent &event)
 	SplitPanel(createSizeReportCtrl(title), info);
 }
 
+
 void MyFrame::createInitialLayout(void)
 {
 	// Set the defaults for this frame.
@@ -636,9 +642,6 @@ void MyFrame::createInitialLayout(void)
 		// Depending on the OS, this may be the system default anyway. If nothing is specified, the
 		// native default is used.
 		.tabstyleTop()
-
-		// Always create a tab, even if there is only one window
-		//.showTab(true)
 	;
 
 	// When the frame is opened, it is recommended to add toolbars before anything else. Otherwise
@@ -661,14 +664,10 @@ void MyFrame::createInitialLayout(void)
 	// By default, the first frame is the main frame and the app closes when this frame is closed.
 	wxDockingPanel *rootTab = AddPanel(createSizeReportCtrl("Ctrl1.1"), wxDockingInfo("Size Report 1.1"));
 
-	// We want to dock to the tab panel, so we have to get the associated tab panel.
-/*	if (Defaults().showTab())
-		rootTab = FindDirectTabParent(rootTab);
+	wxDockingPanel *p = SplitPanel(createSizeReportCtrl("Ctrl2"), wxDockingInfo("Size Report 2").dock(rootTab).right());
+	wxDockingPanel *p1 = SplitPanel(createSizeReportCtrl("Ctrl3.0"), wxDockingInfo("Size Report 3.0").dock(p).down());
+}
 
-	TabbedPanel(createSizeReportCtrl("Ctrl1.2"), wxDockingInfo("Size Report 1.2").dock(rootTab));*/
-
-//	wxDockingPanel *p = SplitPanel(createSizeReportCtrl("Ctrl2"), wxDockingInfo("Size Report 2").dock(rootTab).right());
-/*	wxDockingPanel *p1 = SplitPanel(createSizeReportCtrl("Ctrl3.0"), wxDockingInfo("Size Report 3.0").dock(p).down());
-	TabbedPanel(createSizeReportCtrl("Ctrl3.1"), wxDockingInfo("Size Report 3.1").dock(p1));
-	FloatPanel(createSizeReportCtrl("Ctrl4"), wxDockingInfo("Floating Size Report 4"));*/
+void MyFrame::OnLayoutRemoveDockingPanel(wxCommandEvent &evt)
+{
 }
