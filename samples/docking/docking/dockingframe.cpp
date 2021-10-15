@@ -369,6 +369,26 @@ wxDockingPanel *wxDockingFrame::AddPanel(wxWindow *userWindow, wxDockingInfo con
 	return SplitPanel(userWindow, dinfo);
 }
 
+bool wxDockingFrame::RemovePanel(wxDockingPanel *panel)
+{
+	wxCHECK_MSG(panel, false, wxT("panel can not be a nullptr"));
+
+	return true;
+}
+
+void wxDockingFrame::Undock(wxWindow *userWindow)
+{
+	wxCHECK_MSG(userWindow, (void)false, wxT("userWindow can not be a nullptr"));
+
+	wxDockingPanel *dp  = FindDockingParent(userWindow);
+
+	// If no docking panel was found, the window is not docked.
+	if(!dp)
+		return;
+
+
+}
+
 wxDockingPanel *wxDockingFrame::FindDockingParent(wxWindow *window) const
 {
 	if (!window)
@@ -382,49 +402,6 @@ wxDockingPanel *wxDockingFrame::FindDockingParent(wxWindow *window) const
 
 		window = window->GetParent();
 	} 	while (window);
-
-	return nullptr;
-}
-
-wxDockingPanel *wxDockingFrame::FindTabParent(wxWindow *window) const
-{
-	if (!window)
-		return nullptr;
-
-	do
-	{
-		wxDockingPanel *p = dynamic_cast<wxDockingPanel *>(window);
-		if (p && p->isTabbed())
-			return p;
-
-		window = window->GetParent();
-	} while (window);
-
-	return nullptr;
-}
-
-wxDockingPanel *wxDockingFrame::FindDirectTabParent(wxWindow *window) const
-{
-	if (!window)
-		return nullptr;
-
-	wxDockingPanel *p = FindDockingParent(window);
-	if (!p)
-		return nullptr;
-
-	if (p->isTabbed())
-		return p;
-
-	window = p->GetParent();
-	if (!window)
-		return nullptr;
-
-	p = dynamic_cast<wxDockingPanel *>(window->GetParent());
-	if (!p)
-		return nullptr;
-
-	if (p->isTabbed())
-		return p;
 
 	return nullptr;
 }

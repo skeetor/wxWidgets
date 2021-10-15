@@ -60,19 +60,6 @@ public:
 	wxDockingPanel *FindDockingParent(wxWindow *window) const;
 
 	/**
-	 * Return the tab panel associated with this window.
-	 * If no tab panel is found, a nullpointer is returned. If the window itself is a
-	 * tab panel, then this is returned.
-	 */
-	wxDockingPanel *FindTabParent(wxWindow *window) const;
-
-	/**
-	 * Find the tab parent for the current window, only if it is a direct descendant
-	 * of a tab panel.
-	 */
-	wxDockingPanel *FindDirectTabParent(wxWindow *window) const;
-
-	/**
 	 * The rootPanel holds the panel, which is directly parented to the wxDockingFrame.
 	 * This may change, depending on the layout requirements, so this pointer may not be
 	 * held after the layout has been modified. This pointer will never be null.
@@ -85,6 +72,7 @@ public:
 	 * Returns the currently active panel. This might be a nullptr if no panel is active.
 	 */
 	wxDockingPanel *GetActivePanel(void) const { return m_activePanel; }
+	void SetActivePanel(wxDockingPanel *panel);
 
 	/**
 	 * Add the panel relative to the specified panel in the given direction.
@@ -141,7 +129,16 @@ public:
 	 */
 	bool RemoveToolBar(wxToolBar *toolbar, wxDockingInfo const &info);
 
-	void SetActivePanel(wxDockingPanel *panel);
+	/**
+	 * Remove the specified window from the docking. If the panel is part of a notebook
+	 * the page will be removed. If it was the last page, the notebook will also be deleted.
+	 * If the serwindow is part of a splitter, or a notebook inside a splitter, the split
+	 * window is unsplitted and also removed.
+	 *
+	 * Note: The client should never hold on to a dockingpanel, splitter or notebook as those
+	 * might be deleted in the process and are handled internally.
+	 */
+	void Undock(wxWindow *userWindow);
 
 	/**
 	 * Serialize the current layout to a string, which allows to restore this layout later.
@@ -176,6 +173,13 @@ protected:
 	 * be created.
 	 */
 	wxDockingPanel *CreateTabPanel(wxWindow *userWindow, wxDockingInfo const &info, wxWindow*parent = nullptr);
+
+	/**
+	 * Remove the panel from the docking. The panel is not destroyed itself, even though the docked
+	 * panel can be destroeyed if it becomes empty. The panel can still be docked to some other
+	 * target.
+	 */
+	bool RemovePanel(wxDockingPanel *panel);
 
 	void OnMouseLeftDown(wxMouseEvent &event);
 
