@@ -98,9 +98,6 @@ bool wxDockingFrame::Create(wxWindow *parent, wxWindowID id, const wxString &tit
 	// Register the frame in our list. Should be done first thing after initialzing our frame.
 	gFrames.push_back(this);
 
-	if (!m_rootPanel)
-		m_rootPanel = new wxDockingPanel(this);
-
 	m_activePanel = m_rootPanel;
 
 	m_sizer = new wxGridBagSizer(0, 0);
@@ -124,6 +121,8 @@ void wxDockingFrame::BindEventHandlers(void)
 	wxApp *app = static_cast<wxApp *>(wxApp::GetInstance());
 
 	app->Bind(wxEVT_LEFT_DOWN, &wxDockingFrame::OnMouseLeftDown, this);
+	app->Bind(wxEVT_SIZE, &wxDockingFrame::OnSize, this);
+	app->Bind(wxEVT_SIZING, &wxDockingFrame::OnSize, this);
 }
 
 void wxDockingFrame::UnbindEventHandlers(void)
@@ -134,6 +133,21 @@ void wxDockingFrame::UnbindEventHandlers(void)
 	wxApp *app = static_cast<wxApp *>(wxApp::GetInstance());
 
 	app->Unbind(wxEVT_LEFT_DOWN, &wxDockingFrame::OnMouseLeftDown, this);
+}
+
+void wxDockingFrame::OnSize(wxSizeEvent &event)
+{
+	DoSize();
+	event.Skip();
+}
+
+void wxDockingFrame::DoSize(void)
+{
+	if (m_rootPanel)
+	{
+		wxSize sz = GetClientSize();
+		m_rootPanel->SetSize(sz);
+	}
 }
 
 void wxDockingFrame::SetActivePanel(wxDockingPanel *panel)
@@ -187,206 +201,12 @@ wxDockingPanel *wxDockingFrame::FloatPanel(wxWindow *panel, wxDockingInfo const 
 	return dp;
 }
 
-wxDockingPanel *wxDockingFrame::CreateTabPanel(wxWindow *userWindow, wxDockingInfo const &info, wxWindow *parent)
+wxDockingPanel *wxDockingFrame::FindDirectParent(wxWindow *window) const
 {
-	wxCHECK_MSG(userWindow, nullptr, wxT("userWindow is a nullptr"));
+	if (!window)
+		return nullptr;
 
-	if (!parent)
-		parent = userWindow->GetParent();
-
-	wxDockingPanel *dockingTarget = info.dock();
-	if (!dockingTarget)
-		dockingTarget = new wxDockingPanel(parent, info.title());
-
-	wxNotebook *nb = dynamic_cast<wxNotebook *>(userWindow);
-	if (!nb)
-	{
-		nb = dockingTarget->GetNotebook();
-		if (!nb)
-		{
-			wxWindow *w = dockingTarget->GetWindow();
-			if (!w)
-			{
-				nb = new wxNotebook(dockingTarget, wxID_ANY, wxDefaultPosition, info.size(), info.tabStyle());
-				dockingTarget->SetNotebook(nb);
-			}
-			else
-			{
-				wxWindow *p = dockingTarget->GetParent();
-
-				nb = new wxNotebook(p, wxID_ANY, wxDefaultPosition, info.size(), info.tabStyle());
-				wxDockingPanel *dp = new wxDockingPanel(nb, info.title());
-				dp->SetUserWindow(w);
-				w->Reparent(dp);
-				nb->AddPage(dp, dockingTarget->GetTitle(), true);
-
-				// If the parent is a notebook itself, then we have to replace
-				// the current page with the new one.
-				wxNotebook *pnb = dynamic_cast<wxNotebook *>(p);
-				if (pnb)
-				{
-					int page = pnb->FindPage(dockingTarget);
-					pnb->InsertPage(page, nb, dockingTarget->GetTitle(), true);
-					pnb->RemovePage(page+1);
-				}
-				dockingTarget->SetNotebook(nb);
-				dockingTarget = dp;
-			}
-		}
-	}
-	else
-	{
-		nb->Reparent(dockingTarget);
-		dockingTarget->SetNotebook(nb);
-	}
-
-	if (userWindow != nb)
-	{
-		wxDockingPanel *dp = new wxDockingPanel(nb, info.title());
-		userWindow->Reparent(dp);
-		dp->SetUserWindow(userWindow);
-		nb->AddPage(dp, info.title(), info.isActive());
-	}
-
-	return dockingTarget;
-}
-
-wxDockingPanel *wxDockingFrame::AddTabPanel(wxWindow *userWindow, wxDockingInfo const &info, wxDockingPanel **notebook)
-{
-	wxDockingPanel *dummy = nullptr;
-	if (!notebook)
-		notebook = &dummy;
-
-	// The panel we want to dock to
-	wxDockingPanel *dockingTarget = info.dock();
-
-	wxCHECK_MSG(dockingTarget, nullptr, wxT("Docking target is nullptr"));
-	wxCHECK_MSG(!dockingTarget->isToolBar(), nullptr, wxT("Can not dock to a toolbar"));
-
-	wxDockingInfo nbInfo(info);
-	nbInfo.dock(dockingTarget);
-	nbInfo.activate();
-
-	wxDockingPanel *dp = CreateTabPanel(userWindow, nbInfo, nullptr);
-	*notebook = dp;
-
-	SetActivePanel(dp);
-
-	return dp;
-}
-
-wxDockingPanel *wxDockingFrame::SplitPanel(wxWindow *userWindow, wxDockingInfo const &info)
-{
-	wxDockingPanel *dockingTarget = info.dock();
-
-	if (!dockingTarget)
-		dockingTarget = GetRootPanel();
-
-	wxWindow *w = dockingTarget->GetWindow();
-
-	// This check can only trigger for the first window, when no other panel has been added yet.
-	// The first window should always be a center panel.
-	wxCHECK_MSG(w, nullptr, wxT("Can not dock using a nullptr as target"));
-
-	wxSplitterWindow *splitter = new wxSplitterWindow(dockingTarget, wxID_ANY);
-
-	// The splitter window will replace the current window, so it will
-	// get the full size of it.
-	splitter->SetSashGravity(1.0);
-	wxSize sz = dockingTarget->GetSize();
-	splitter->SetSize(sz);
-
-	wxDockingInfo childInfo;
-	childInfo.title(dockingTarget->GetTitle());
-	childInfo.dock(nullptr);
-	childInfo.activate();
-
-	// Create a new docking panel and convert the current window to it
-	wxDockingPanel *dp1 = nullptr;
-
-	wxNotebook *nb = dockingTarget->GetNotebook();
-	if (nb)
-		dp1 = CreateTabPanel(nb, childInfo, splitter);
-	else
-	{
-		dp1 = new wxDockingPanel(splitter, dockingTarget->GetTitle());
-		w->Reparent(dp1);
-		dp1->TakeDocking(dockingTarget);
-	}
-
-	dockingTarget->SetSplitter(splitter);
-
-	// Create a docking panel for the new window.
-	childInfo = info;
-	childInfo.dock(nullptr);
-	childInfo.activate();
-	wxDockingPanel *dp2 = CreateTabPanel(userWindow, childInfo, splitter);
-	wxDockingPanel *result = dockingTarget;
-
-	wxDirection direction = info.direction();
-	if (direction == wxLEFT || direction == wxRIGHT)
-	{
-		if (direction == wxLEFT)
-			swap(dp1, dp2);
-
-		uint32_t pos = sz.x / 2;
-		splitter->SplitVertically(dp1, dp2, pos);
-	}
-	else
-	{
-		if (direction == wxUP)
-			swap(dp1, dp2);
-
-		uint32_t pos = sz.y / 2;
-		splitter->SplitHorizontally(dp1, dp2, pos);
-	}
-
-	SetActivePanel(result);
-
-	return result;
-}
-
-wxDockingPanel *wxDockingFrame::AddPanel(wxWindow *userWindow, wxDockingInfo const &info, wxDockingPanel **notebook)
-{
-	wxCHECK_MSG(userWindow, nullptr, wxT("userWindow can not be added using a nullptr"));
-
-	if (notebook)
-		*notebook = nullptr;
-
-	wxDockingInfo dinfo = info;
-	wxDockingPanel *dockingTarget = dinfo.dock();
-	wxDirection direction = dinfo.direction();
-	if (!dockingTarget)
-	{
-		dockingTarget = m_rootPanel;
-		dinfo.dock(dockingTarget);
-		direction = wxCENTRAL;
-	}
-
-	if (direction == wxCENTRAL)
-		return AddTabPanel(userWindow, dinfo, notebook);
-
-	return SplitPanel(userWindow, dinfo);
-}
-
-bool wxDockingFrame::RemovePanel(wxDockingPanel *panel)
-{
-	wxCHECK_MSG(panel, false, wxT("panel can not be a nullptr"));
-
-	return true;
-}
-
-void wxDockingFrame::Undock(wxWindow *userWindow)
-{
-	wxCHECK_MSG(userWindow, (void)false, wxT("userWindow can not be a nullptr"));
-
-	wxDockingPanel *dp  = FindDockingParent(userWindow);
-
-	// If no docking panel was found, the window is not docked.
-	if(!dp)
-		return;
-
-
+	return dynamic_cast<wxDockingPanel *>(window->GetParent());
 }
 
 wxDockingPanel *wxDockingFrame::FindDockingParent(wxWindow *window) const
@@ -472,15 +292,18 @@ void wxDockingFrame::UpdateToolbarLayout(void)
 	if (m_toolbarsBottom)
 		m_sizer->Add(m_toolbarsBottom, wxGBPosition(1+top, 0), wxGBSpan(1, 1+left+right), wxEXPAND, border);
 
-	wxGBPosition rootPos(top, left);
-	m_sizer->Add(m_rootPanel, rootPos, wxGBSpan(1, 1), wxEXPAND, border);
+	if (m_rootPanel)
+	{
+		wxGBPosition rootPos(top, left);
+		m_sizer->Add(m_rootPanel, rootPos, wxGBSpan(1, 1), wxEXPAND, border);
 
-	m_sizer->AddGrowableCol(rootPos.GetCol());
-	m_sizer->AddGrowableRow(rootPos.GetRow());
+		m_sizer->AddGrowableCol(rootPos.GetCol());
+		m_sizer->AddGrowableRow(rootPos.GetRow());
 
-	SetSizer(m_sizer, true);
-	Layout();
-	m_rootPanel->Update();
+		SetSizer(m_sizer, true);
+		Layout();
+		m_rootPanel->Update();
+	}
 }
 
 wxDockingPanel *wxDockingFrame::AddToolBar(wxToolBar *toolbar, wxDockingInfo const &info)
@@ -580,6 +403,181 @@ bool wxDockingFrame::RemoveToolBar(wxToolBar *toolbar, wxDockingInfo const &info
 		UpdateToolbarLayout();
 
 	return rc;
+}
+
+wxNotebook *wxDockingFrame::ConvertToNotebook(wxWindow *source, wxWindow *currentWindow, wxDockingInfo const &info)
+{
+	// Convert the source window we want to attach to, to the new notebook.
+	wxNotebook *pnb = dynamic_cast<wxNotebook *>(source);
+	if (!pnb)
+		return pnb;
+
+	int index = pnb->FindPage(currentWindow);
+	// Normally the window should be a page of the notebook in this case but we can't do much here.
+	if (index != wxNOT_FOUND)
+	{
+		wxWindow *page = pnb->GetPage(index);
+		wxString title = pnb->GetPageText(index);
+		pnb->RemovePage(index);
+		wxNotebook *nb = new wxNotebook(pnb, wxID_ANY, wxDefaultPosition, info.size(), info.tabStyle());
+		page->Reparent(nb);
+		pnb->InsertPage(index, nb, title);
+		nb->AddPage(page, title, true);
+
+		return nb;
+	}
+
+	return nullptr;
+}
+
+wxDockingPanel *wxDockingFrame::AddTabPanel(wxWindow *userWindow, wxDockingInfo const &info, wxDockingPanel **notebook)
+{
+	wxDockingPanel *dummy = nullptr;
+	if (!notebook)
+		notebook = &dummy;
+
+	// The panel we want to dock to
+	wxDockingPanel *dockingTarget = info.dock();
+
+	if (dockingTarget)
+	{
+		wxCHECK_MSG(!dockingTarget->isToolBar(), nullptr, wxT("Can not dock to a toolbar"));
+	}
+
+	wxDockingPanel *dp = CreateTabPanel(userWindow, info, nullptr);
+	*notebook = dp;
+
+	SetActivePanel(dp);
+
+	return dp;
+}
+
+wxDockingPanel *wxDockingFrame::CreateTabPanel(wxWindow *userWindow, wxDockingInfo const &info, wxWindow *parent)
+{
+	wxCHECK_MSG(userWindow, nullptr, wxT("userWindow is a nullptr"));
+
+	wxDockingPanel *ndp = nullptr;
+	wxDockingPanel *dockingTarget = info.dock();
+
+	if (!dockingTarget)
+	{
+		if (!parent)
+			parent = userWindow->GetParent();
+
+		dockingTarget = new wxDockingPanel(parent);
+		ndp = dockingTarget;
+	}
+	else
+	{
+		if (!parent)
+			parent = dockingTarget->GetParent();
+	}
+
+	wxNotebook *nb = dockingTarget->GetNotebook();
+	if (!nb)
+	{
+		if (!ndp)
+			ndp = new wxDockingPanel(parent);
+
+		// Convert the current page we want to attach to, to the new notebook.
+		nb = ConvertToNotebook(parent, dockingTarget, info);
+		if (!nb)
+			nb = new wxNotebook(ndp, wxID_ANY, wxDefaultPosition, info.size(), info.tabStyle());
+
+		ndp->SetNotebook(nb);
+	}
+	else
+		ndp = dockingTarget;
+
+	wxDockingPanel *udp = new wxDockingPanel(nb, info.title());
+	udp->SetUserWindow(userWindow);
+	userWindow->Reparent(udp);
+	nb->AddPage(udp, info.title(), true);
+
+	if (!m_rootPanel)
+		m_rootPanel = ndp;
+
+	return ndp;
+}
+
+wxDockingPanel *wxDockingFrame::SplitPanel(wxWindow *userWindow, wxDockingInfo const &info)
+{
+	wxDockingPanel *dockingTarget = info.dock();
+
+	if (!dockingTarget)
+		dockingTarget = GetRootPanel();
+
+	// This check can only trigger for the first window, when no other panel has been added yet.
+	// The first window should always be a center panel.
+	wxCHECK_MSG(dockingTarget, nullptr, wxT("Can not dock using a nullptr as target"));
+
+	wxSize sz = dockingTarget->GetSize();
+
+	wxDockingPanel *dp1 = new wxDockingPanel(dockingTarget->GetParent());
+	wxSplitterWindow *splitter = new wxSplitterWindow(dp1, wxID_ANY);
+	dp1->SetSplitter(splitter);
+
+	// The splitter window will replace the current window, so it will
+	// get the full size of it.
+	splitter->SetSashGravity(1.0);
+	splitter->SetSize(sz);
+	dockingTarget->Reparent(splitter);
+	if (dockingTarget == m_rootPanel)
+		m_rootPanel = dp1;
+
+	swap(dp1, dockingTarget);
+
+	// Create a docking panel for the new window.
+	wxDockingInfo childInfo = info;
+	childInfo.dock(dockingTarget);
+	childInfo.activate();
+	wxDockingPanel *dp2 = CreateTabPanel(userWindow, childInfo, splitter);
+	wxDockingPanel *result = dp2;
+
+	wxWindow *p = dp1->GetParent();
+	p = dp2->GetParent();
+
+	wxDirection direction = info.direction();
+	if (direction == wxLEFT || direction == wxRIGHT)
+	{
+		if (direction == wxLEFT)
+			swap(dp1, dp2);
+
+		uint32_t pos = sz.x / 2;
+		splitter->SplitVertically(dp1, dp2, pos);
+	}
+	else
+	{
+		if (direction == wxUP)
+			swap(dp1, dp2);
+
+		uint32_t pos = sz.y / 2;
+		splitter->SplitHorizontally(dp1, dp2, pos);
+	}
+
+	SetActivePanel(result);
+
+	return result;
+}
+
+bool wxDockingFrame::RemovePanel(wxDockingPanel *panel)
+{
+	wxCHECK_MSG(panel, false, wxT("panel can not be a nullptr"));
+
+	return true;
+}
+
+void wxDockingFrame::Undock(wxWindow *userWindow)
+{
+	wxCHECK_MSG(userWindow, (void)false, wxT("userWindow can not be a nullptr"));
+
+	wxDockingPanel *dp = FindDockingParent(userWindow);
+
+	// If no docking panel was found, the window is not docked.
+	if (!dp)
+		return;
+
+
 }
 
 #endif // wxUSE_DOCKING

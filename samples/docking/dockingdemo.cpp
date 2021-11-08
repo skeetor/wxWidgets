@@ -330,7 +330,7 @@ wxMenu *MyFrame::createDockingMenu(void)
 	submenu->Append(new wxMenuItem(submenu, ID_LayoutSplitTopBorder, wxString(wxT("Top")), wxEmptyString, wxITEM_NORMAL));
 	submenu->Append(new wxMenuItem(submenu, ID_LayoutSplitBottomBorder, wxString(wxT("Bottom")), wxEmptyString, wxITEM_NORMAL));
 	menu->Append(new wxMenuItem(menu, wxID_ANY, wxT("Split to border"), wxEmptyString, wxITEM_NORMAL, submenu));
-	menu->Append(new wxMenuItem(menu, ID_LayoutRemoveDockedPanel, wxString(wxT("Remove docked panel")), wxEmptyString, wxITEM_NORMAL));
+	menu->Append(new wxMenuItem(menu, ID_LayoutRemoveDockedPanel, wxString(wxT("Remove panel")), wxEmptyString, wxITEM_NORMAL));
 	menu->AppendSeparator();
 	menu->Append(new wxMenuItem(submenu, ID_LayoutCopySerialize, wxString(wxT("Copy layout to Clipboard")), wxEmptyString, wxITEM_NORMAL));
 	menu->Append(new wxMenuItem(submenu, ID_LayoutSerialize, wxString(wxT("Save layout")), wxEmptyString, wxITEM_NORMAL));
@@ -601,7 +601,11 @@ void MyFrame::OnNewPanel(wxCommandEvent &event)
 		break;
 	}
 
-	AddPanel(createSizeReportCtrl(title), info);
+	wxSizeReportCtrl *panel = createSizeReportCtrl(title);
+	if (info.isCenter())
+		AddTabPanel(panel, info);
+	else
+		SplitPanel(panel, info);
 }
 
 void MyFrame::OnNewPanelBorder(wxCommandEvent &event)
@@ -648,26 +652,25 @@ void MyFrame::createInitialLayout(void)
 	// the size of the clientrectangle is wrong, until the window is resized.
 	//AddToolBar(horizontalToolBar(true), wxDockingInfo("Toolbar 1 Horizontal").toolbarTop());
 
-	// For the first panel it doesn't really matter, which direction is specified
-	// but wxCENTRAL should be used.
-	// The first panel could also be created by TabbedPanel() docking to the rootpanel.
-	// Example:
-	// TabbedPanel(createSizeReportCtrl("Ctrl1.1"), wxDockingInfo("Size Report 1.1").dock(GetRootPanel()));
-	// 
-	// The first panel can never be splitted because there is nothing to split.
+	// The first panel can never be splitted because there is nothing to split, so it has to be a tabbed panel.
 	// 
 	// Since a floating window is separate, and not docked to any other window, it can be created
-	// any time, but adding tabs or splits, will obviously only happen in the float and not affect
-	// the main frame, which would stay empty in this case.
-	// Technically there is no difference between a floating frame and the main frame, so the main window
-	// can be closed if there is a suitable frame still open (which would have to take special measures though).
+	// any time.
 	// By default, the first frame is the main frame and the app closes when this frame is closed.
-	wxDockingPanel *rootTab = AddPanel(createSizeReportCtrl("Ctrl1.1"), wxDockingInfo("Size Report 1.1"));
+	// This can be overriden if multiple frames are desired.
+	wxDockingPanel *rootTab = AddTabPanel(createSizeReportCtrl("Ctrl1.1"), wxDockingInfo("Size Report 1.1"));
+	//wxDockingPanel *r = AddPanel(createSizeReportCtrl("Ctrl1.2"), wxDockingInfo("Size Report 1.2").dock(rootTab));
 
-	wxDockingPanel *p = SplitPanel(createSizeReportCtrl("Ctrl2"), wxDockingInfo("Size Report 2").dock(rootTab).right());
-	wxDockingPanel *p1 = SplitPanel(createSizeReportCtrl("Ctrl3.0"), wxDockingInfo("Size Report 3.0").dock(p).down());
+	//wxDockingPanel *p = SplitPanel(createSizeReportCtrl("Ctrl2.0"), wxDockingInfo("Size Report 2.0").dock(rootTab).right());
+	//wxDockingPanel *p1 = SplitPanel(createSizeReportCtrl("Ctrl3.0"), wxDockingInfo("Size Report 3.0").dock(p).right());
+	//SplitPanel(createSizeReportCtrl("Ctrl4.0"), wxDockingInfo("Size Report 4.0").dock(p).down());
 }
 
 void MyFrame::OnLayoutRemoveDockingPanel(wxCommandEvent &evt)
 {
+	WXUNUSED(evt);
+
+	wxPoint mousePos = ::wxGetMousePosition();
+	wxWindow *w = wxFindWindowAtPoint(mousePos);
+	Undock(w);
 }

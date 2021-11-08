@@ -45,10 +45,11 @@ void wxDockingPanel::TakeDocking(wxDockingPanel const &source)
 
 void wxDockingPanel::OnSize(wxSizeEvent &event)
 {
-	wxWindowList &children = GetChildren();
-
-	for(wxWindow *w : children)
-		w->SetSize(GetClientSize());
+	if (m_userWindow)
+	{
+		wxSize sz = GetClientSize();
+		m_userWindow->SetSize(sz);
+	}
 
 	event.Skip();
 }

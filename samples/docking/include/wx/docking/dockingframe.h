@@ -12,6 +12,7 @@
 
 class wxDockingPanel;
 class wxGridBagSizer;
+class wxNotebook;
 
 /**
  * wxDockingFrame provides the main frame window handling docking
@@ -55,9 +56,15 @@ public:
 
 	/**
 	 * Find the wxDockingPanel where the specified window resides in. If the window
-	 * is already a wxDockingPanel, then this is returned.
+	 * is already a wxDockingPanel, then this is returned. The docking parent is not
+	 * neccessarily the direct parent of this window.
 	 */
 	wxDockingPanel *FindDockingParent(wxWindow *window) const;
+
+	/**
+	 * Return the dockingpanel if the user window is directly associated with it.
+	 */
+	wxDockingPanel *FindDirectParent(wxWindow *window) const;
 
 	/**
 	 * The rootPanel holds the panel, which is directly parented to the wxDockingFrame.
@@ -73,22 +80,6 @@ public:
 	 */
 	wxDockingPanel *GetActivePanel(void) const { return m_activePanel; }
 	void SetActivePanel(wxDockingPanel *panel);
-
-	/**
-	 * Add the panel relative to the specified panel in the given direction.
-	 * If the dockinpPanel is a nullptr, it will be docked to the respective border.
-	 * 
-	 * @param panel The user provided panel. This window will be reparented
-	 * to the layout, so no assumpetions should be done about a particular
-	 * window hierarchy.
-	 * @param title A title string, which will be used when the window is
-	 * floating or turned into a tab. It might also be used for a drag handle
-	 * if applicable.
-	 * 
-	 * If successfull, the dockingpanel which it is attached to is returned,
-	 * otherwise a nullptr.
-	 */
-	wxDockingPanel *AddPanel(wxWindow *panel, wxDockingInfo const &info, wxDockingPanel **notebook = nullptr);
 
 	/**
 	 * Add the panel to a tab in the dockiongPanel. If the dockingPanel doesn't
@@ -164,7 +155,11 @@ public:
 	 */
 	//bool DeserializeFrame(wxString layout);
 
+	void OnSize(wxSizeEvent &event);
+
 protected:
+	void DoSize(void);
+
 	/**
 	 * Create a wxNotebook tab panel with the userWindow as it's page. If the userWindow is
 	 * a wxNotebook it will not create a new one, instead it adds the userWindow to it. If the
@@ -176,7 +171,7 @@ protected:
 
 	/**
 	 * Remove the panel from the docking. The panel is not destroyed itself, even though the docked
-	 * panel can be destroeyed if it becomes empty. The panel can still be docked to some other
+	 * panel can be destroyed if it becomes empty. The panel can still be docked to some other
 	 * target.
 	 */
 	bool RemovePanel(wxDockingPanel *panel);
@@ -185,6 +180,8 @@ protected:
 
 	void UpdateToolbarLayout(void);
 	bool HideToolbar(wxDockingPanel *&toolbar);
+
+	wxNotebook *ConvertToNotebook(wxWindow *source, wxWindow *pageWindow, wxDockingInfo const &info);
 
 private:
 	void init(void);
