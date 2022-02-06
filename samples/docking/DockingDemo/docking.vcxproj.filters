@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{37345eb6-3f2c-4f6e-b980-3ba8e3d2ccc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{186ff862-54c2-4d7d-a0f1-ffce536855c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\wx">
+      <UniqueIdentifier>{dda3e140-48c4-4c2b-b310-cbfd3c5b4473}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\wx\docking">
+      <UniqueIdentifier>{11b05d6b-d31c-42a5-9014-2dba90621c7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\wx">
+      <UniqueIdentifier>{399fc784-9f62-4952-bb40-47a7d80ed181}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\wx\docking">
+      <UniqueIdentifier>{087a21ed-dc2b-4de2-ae42-6c5d2a0e92fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\wx\docking\bitmaps">
+      <UniqueIdentifier>{1d3561b2-ae01-4e69-92e9-b4f2564fbb54}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dockingdemo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wx\docking\buttonoverlay.cpp">
+      <Filter>Source Files\wx\docking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wx\docking\dockingbutton.cpp">
+      <Filter>Source Files\wx\docking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wx\docking\dockingevent.cpp">
+      <Filter>Source Files\wx\docking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wx\docking\dockingframe.cpp">
+      <Filter>Source Files\wx\docking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wx\docking\dockinginfo.cpp">
+      <Filter>Source Files\wx\docking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wx\docking\dockingentity.cpp">
+      <Filter>Source Files\wx\docking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wx\docking\dockingutils.cpp">
+      <Filter>Source Files\wx\docking</Filter>
+    </ClCompile>
+    <ClCompile Include="custom_buttonoverlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wx\docking\dockingglobalstate.cpp">
+      <Filter>Source Files\wx\docking</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="docking.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\wx\include\wx\docking\bitmaps\DockTab.xpm">
+      <Filter>Header Files\wx\docking\bitmaps</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\wx\include\wx\docking\buttonoverlay.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\docking.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\docking_defs.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\dockingbutton.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\dockingevent.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\dockingframe.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\dockinginfo.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\dockingentity.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\dockingutils.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+    <ClInclude Include="custom_buttonoverlay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\dockingglobalstate.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
