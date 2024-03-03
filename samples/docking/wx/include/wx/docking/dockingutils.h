@@ -26,15 +26,16 @@ namespace wxDockingUtils
 	/**
 	 * Find the wxDockingFrame from the specified window.
 	 */
-	WXDLLIMPEXP_DOCKING wxDockingFrame *FrameFromWindow(wxWindow *window);
+	WXDLLIMPEXP_DOCKING wxDockingFrame *DockingFrameFromWindow(wxWindow *window);
 
 	/**
-	 * Find the parent we can dock to. If the provided window is already dockable, this is
-	 * returned.
+	 * Find the parent we can dock to,which is either a splitter, notebook or a frame.
+	 * If the provided window is already dockable, this is returned and child might be null.
+	 * 
 	 * dockingChild returns the child window which is directly connected to the dockingpanel.
 	 * If window is the dockingPanel itself, then dockingChild is nullptr.
 	 */
-	WXDLLIMPEXP_DOCKING wxDockingEntity FindPanel(wxDockingEntity const &window, wxWindow **dockingChild = nullptr);
+	WXDLLIMPEXP_DOCKING wxDockingEntity FindParentPanel(wxDockingEntity const &window, wxWindow **dockingChild = nullptr);
 
 	/**
 	 * Returns true if the window can be docked to. By default a window can be docked to
@@ -117,7 +118,7 @@ namespace wxDockingUtils
 	}
 
 	/**
-	 * Contains only unique values. Only suitable for small number of elements.
+	 * Contains only unique values. Only recommended for small number of elements.
 	 */
 	template <typename T>
 	class wxUniqueVector

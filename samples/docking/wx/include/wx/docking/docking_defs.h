@@ -45,7 +45,7 @@ class wxNotebook;
 typedef enum
 {
 	wxDOCKING_NONE,
-	wxDOCKING_USER,
+	wxDOCKING_WINDOW,
 	wxDOCKING_SPLITTER,
 	wxDOCKING_NOTEBOOK,
 	wxDOCKING_TOOLBAR,

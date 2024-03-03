@@ -31,7 +31,7 @@ namespace wxDockingUtils
 		switch (type)
 		{
 			TYPESTRING(wxDOCKING_NONE);
-			TYPESTRING(wxDOCKING_USER);
+			TYPESTRING(wxDOCKING_WINDOW);
 			TYPESTRING(wxDOCKING_SPLITTER);
 			TYPESTRING(wxDOCKING_NOTEBOOK);
 			TYPESTRING(wxDOCKING_TOOLBAR);
@@ -42,7 +42,7 @@ namespace wxDockingUtils
 		return s << type;
 	}
 
-	wxDockingFrame *FrameFromWindow(wxWindow *w)
+	wxDockingFrame *DockingFrameFromWindow(wxWindow *w)
 	{
 		while (w)
 		{
@@ -56,7 +56,7 @@ namespace wxDockingUtils
 		return nullptr;
 	}
 
-	wxDockingEntity FindPanel(wxDockingEntity const &window, wxWindow **dockingChild)
+	wxDockingEntity FindParentPanel(wxDockingEntity const &window, wxWindow **dockingChild)
 	{
 		if (dockingChild)
 			*dockingChild = nullptr;
@@ -75,6 +75,7 @@ namespace wxDockingUtils
 					child = nb->GetCurrentPage();
 				}
 
+				// child will be null if the provided window was already a splitter or a frame.
 				if (dockingChild)
 					*dockingChild = child;
 
@@ -275,7 +276,7 @@ namespace wxDockingUtils
 			// If the target is the same as the source, then we have to check if it is a notebook.
 			// In that case the user may want to move a tab to a new position.
 			// For a splitter, there is nothing we can do.
-			if (src.GetPanel() == tgt.GetPanel())
+			if (src.GetWindow() == tgt.GetWindow())
 			{
 				size_t si = src.GetPage();
 				size_t ti = tgt.GetPage();
@@ -295,7 +296,7 @@ namespace wxDockingUtils
 		else if (tw.GetType() == wxDOCKING_SPLITTER)
 		{
 			// We have to prevent the case where the window is moved into it's own splitter
-			wxDockingEntity const &sp = src.GetPanel();
+			wxDockingEntity const &sp = src.GetWindow();
 			if (sp == tw)
 				return false;
 		}

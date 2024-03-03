@@ -39,7 +39,7 @@ static void PrintDebugBar(wxDockingEvent const &event, wxDockingGlobalState cons
 		//<< " ===> "
 		<< "Target - "
 		<< "Frame: " << wxString().Format(wxS("%p"), (void *)tgt.GetFrame()) << " "
-		<< "Panel: " << wxString().Format(wxS("%p"), (void *)tgt.GetPanel().GetWindow()) << " "
+		<< "Panel: " << wxString().Format(wxS("%p"), (void *)tgt.GetPanel().GetRawWindow()) << " "
 		<< "Window: " << wxString().Format(wxS("%p"), (void *)tgt.GetWindow()) << " "
 		<< "Page: " << ((tgt.GetPage() == wxNOT_FOUND) ? "N/A" : wxString() << tgt.GetPage()) << " "
 		<< "Dir: " << tgt.GetDirection() << " "
@@ -837,7 +837,7 @@ void wxDockingFrame::OnReleaseDockingPanel(wxDockingEvent &event)
 {
 	wxDockingEntity &p = event.GetTarget().GetWindow();
 
-	p.GetWindow()->Destroy();
+	p.GetRawWindow()->Destroy();
 	p.SetWindow(nullptr);
 }
 
@@ -1308,7 +1308,7 @@ void wxDockingFrame::OnSplitterDClick(wxSplitterEvent &event)
 bool wxDockingFrame::CheckChildState(wxDockingInfo const &src, wxDockingInfo const &tgt)
 {
 	// Check if we try to dock a window into a child of itself.
-	if (wxDockingUtils::IsParentOf(src.GetDockingEntity().GetWindow(), tgt.GetDockingEntity().GetWindow()))
+	if (wxDockingUtils::IsParentOf(src.GetDockingEntity().GetRawWindow(), tgt.GetDockingEntity().GetRawWindow()))
 		return false;
 
 	return true;

@@ -60,7 +60,7 @@ public:
     operator wxWindow *() const { return m_window; }
 
 	bool operator ==(wxWindow *window) const { return window == m_window; }
-	bool operator ==(wxDockingEntity const &pp) const { return pp.GetWindow() == m_window; }
+	bool operator ==(wxDockingEntity const &pp) const { return pp.GetRawWindow() == m_window; }
 
 	wxDockingEntityType GetType() const { return m_type; }
 	void SetType(wxDockingEntityType type) { m_type = type; }
@@ -70,8 +70,9 @@ public:
     wxDockingEntityType Set(wxWindow *window);
     void Set(wxWindow *window, wxDockingEntityType type) { m_window = window; m_type = type; }
 
-	wxWindow *GetWindow() const { return m_window; }
-	void SetWindow(wxWindow *window) { m_window = window; (window == nullptr) ? m_type = wxDOCKING_NONE : m_type = wxDOCKING_USER; }
+	wxWindow *GetRawWindow() const { return m_window; }
+	wxWindow *GetWindow() const { return (m_type == wxDOCKING_WINDOW) ? m_window : nullptr; }
+	void SetWindow(wxWindow *window) { m_window = window; (window == nullptr) ? m_type = wxDOCKING_NONE : m_type = wxDOCKING_WINDOW; }
 
 	wxNotebook *GetNotebook() const { return (m_type == wxDOCKING_NOTEBOOK) ? m_notebook : nullptr; }
 	void SetNotebook(wxNotebook *window) { m_notebook = window; (window == nullptr) ? m_type = wxDOCKING_NONE : m_type = wxDOCKING_NOTEBOOK; }

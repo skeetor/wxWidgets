@@ -112,7 +112,7 @@ bool wxDockingInfo::FromWindow(wxWindow *source, wxDockingFrame *frame)
 	wxWindow *dockingSource = nullptr;
 
 	// If the source window is not part of a docking panel, we can't do anything about it.
-	wxDockingEntity p = wxDockingUtils::FindPanel(source, &dockingSource);
+	wxDockingEntity p = wxDockingUtils::FindParentPanel(source, &dockingSource);
 	if (!p)
 		return false;
 
@@ -139,7 +139,7 @@ bool wxDockingInfo::FromWindow(wxWindow *source, wxDockingFrame *frame)
 		SetOrientation(orientation);
 	}
 
-	SetFrame(wxDockingUtils::FrameFromWindow(source));
+	SetFrame(wxDockingUtils::DockingFrameFromWindow(source));
 	if (!GetFrame())
 		SetFrame(frame);
 

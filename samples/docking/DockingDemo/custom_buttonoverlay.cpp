@@ -153,7 +153,7 @@ bool CustomOverlay::ButtonHitUpdate(wxDockingEvent &event)
 		// inside a notebook.
 		wxDockingInfo &tgt = event.GetTarget();
 		wxDockingEntity &tw = tgt.GetWindow();
-		wxDockingEntity const &nb = wxDockingUtils::FindPanel(tw);
+		wxDockingEntity const &nb = wxDockingUtils::FindParentPanel(tw);
 		if (nb.GetNotebook() != nullptr)
 		{
 			tgt.SetWindow(nullptr, wxDOCKING_NONE);

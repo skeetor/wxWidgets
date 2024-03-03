@@ -631,7 +631,7 @@ void MyFrame::UpdateStatusText(wxDockingEntity const &container, wxDockingEntity
 		s << "not ";
 	s << "dragable ";
 
-	s << "Container " << PanelTypeToString(container) << wxString().Format(wxS(": %p"), (void *)container.GetWindow()) << " ";
+	s << "Container " << PanelTypeToString(container) << wxString().Format(wxS(": %p"), (void *)container.GetRawWindow()) << " ";
 
 	if (gs.IsLocked(panel))
 		s << "locked";
@@ -956,7 +956,7 @@ void MyFrame::OnMouseRightUp(wxMouseEvent &event)
 	wxPoint mousePos = ::wxGetMousePosition();
 	wxWindow *w = wxFindWindowAtPoint(mousePos);
 	wxWindow *dockingChild = nullptr;
-	wxDockingEntity p = wxDockingUtils::FindPanel(w, &dockingChild);
+	wxDockingEntity p = wxDockingUtils::FindParentPanel(w, &dockingChild);
 	wxSizeReportCtrl *ctrl = wxDynamicCast(dockingChild, wxSizeReportCtrl);
 
 	wxMenu menu;

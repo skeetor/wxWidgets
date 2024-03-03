@@ -58,21 +58,21 @@ int wxDockingEventFilter::FilterEvent(wxEvent &event)
 	if (t == wxEVT_LEFT_DOWN)
 	{
 		wxWindow *w = wxDynamicCast(event.GetEventObject(), wxWindow);
-		wxDockingFrame *frame = wxDockingUtils::FrameFromWindow(w);
+		wxDockingFrame *frame = wxDockingUtils::DockingFrameFromWindow(w);
 		if (frame)
 			return frame->OnMouseLeftDown((wxMouseEvent &)event);
 	}
 	if (t == wxEVT_LEFT_UP)
 	{
 		wxWindow *w = wxDynamicCast(event.GetEventObject(), wxWindow);
-		wxDockingFrame *frame = wxDockingUtils::FrameFromWindow(w);
+		wxDockingFrame *frame = wxDockingUtils::DockingFrameFromWindow(w);
 		if (frame)
 			return frame->OnMouseLeftUp((wxMouseEvent &)event);
 	}
 	else if (t == wxEVT_MOTION)
 	{
 		wxWindow *w = wxDynamicCast(event.GetEventObject(), wxWindow);
-		wxDockingFrame *frame = wxDockingUtils::FrameFromWindow(w);
+		wxDockingFrame *frame = wxDockingUtils::DockingFrameFromWindow(w);
 		if (frame)
 			return frame->OnMouseMove((wxMouseEvent &)event);
 	}

@@ -72,7 +72,7 @@ wxDockingEntityType wxDockingEntity::Set(wxWindow *window)
 	}
 
 	m_window = window;
-	m_type = wxDOCKING_USER;
+	m_type = wxDOCKING_WINDOW;
 
 	return m_type;
 }
