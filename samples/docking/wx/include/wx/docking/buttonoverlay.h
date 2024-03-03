@@ -10,20 +10,12 @@
 #include <wx/docking/docking_defs.h>
 #include <wx/docking/dockinginfo.h>
 #include <wx/docking/dockingevent.h>
+#include <wx/docking/dockingoverlay.h>
 
 class wxDockingButton;
 
-class WXDLLIMPEXP_DOCKING wxIDockingButtonOverlay
-{
-public:
-	virtual ~wxIDockingButtonOverlay() {}
-
-	virtual void ProcessOverlay(wxDockingEvent &event) = 0;
-	virtual void Refresh() = 0;
-};
-
 class WXDLLIMPEXP_DOCKING wxDockingButtonOverlay
-	: public wxIDockingButtonOverlay
+	: public wxIDockingOverlay
 {
 public:
 	wxDockingButtonOverlay(wxWindow *parent);

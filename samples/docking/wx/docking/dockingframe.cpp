@@ -1616,7 +1616,7 @@ void wxDockingFrame::InitTarget(wxDockingEvent &event)
 void wxDockingFrame::OnTrackMove(wxDockingEvent &event)
 {
 	wxDockingInfo &tgt = event.GetTarget();
-	std::shared_ptr<wxIDockingButtonOverlay> overlay = event.GetOverlayHandler();
+	std::shared_ptr<wxIDockingOverlay> overlay = event.GetOverlayHandler();
 	if (overlay)
 		overlay->ProcessOverlay(event);
 

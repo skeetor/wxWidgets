@@ -535,6 +535,7 @@
     <ClInclude Include="..\wx\include\wx\docking\dockingglobalstate.h" />
     <ClInclude Include="..\wx\include\wx\docking\dockinginfo.h" />
     <ClInclude Include="..\wx\include\wx\docking\dockingentity.h" />
+    <ClInclude Include="..\wx\include\wx\docking\dockingoverlay.h" />
     <ClInclude Include="..\wx\include\wx\docking\dockingutils.h" />
     <ClInclude Include="..\wx\include\wx\docking\docking_defs.h" />
     <ClInclude Include="custom_buttonoverlay.h" />

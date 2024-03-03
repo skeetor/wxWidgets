@@ -110,5 +110,8 @@
     <ClInclude Include="..\wx\include\wx\docking\dockingglobalstate.h">
       <Filter>Header Files\wx\docking</Filter>
     </ClInclude>
+    <ClInclude Include="..\wx\include\wx\docking\dockingoverlay.h">
+      <Filter>Header Files\wx\docking</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

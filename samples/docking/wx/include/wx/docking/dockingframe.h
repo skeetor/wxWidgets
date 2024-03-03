@@ -13,8 +13,7 @@
 #include <wx/docking/dockingevent.h>
 #include <wx/docking/dockinginfo.h>
 #include <wx/docking/dockingglobalstate.h>
-
-class wxIDockingButtonOverlay;
+#include <wx/docking/dockingoverlay.h>
 
 /**
  * wxDockingFrame provides the main frame window handling docking
