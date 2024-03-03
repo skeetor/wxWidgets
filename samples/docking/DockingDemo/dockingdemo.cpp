@@ -614,7 +614,7 @@ void MyFrame::HighlightWindow(wxSizeReportCtrl *panel, bool highlight)
 
 void MyFrame::UpdateStatusText(wxDockingEntity const &container, wxDockingEntity const &panel)
 {
-	wxDockingGlobalState const &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState const &gs = wxDockingState::GetInstance();
 	wxString s;
 	s
 		<< "Activate "
@@ -688,10 +688,12 @@ void MyFrame::OnDockingStart(wxDockingEvent &event)
 		return;
 	}
 
+	wxDockingState &gs = wxDockingState::GetInstance();
+
 	if (m_overlayMode == ID_OverlayDisable)
-		event.SetOverlayHandler(nullptr);
+		gs.SetOverlayHandler(nullptr);
 	else if (m_overlayMode == ID_OverlayCustom)
-		event.SetOverlayHandler(std::make_shared<CustomOverlay>(this));
+		gs.SetOverlayHandler(new CustomOverlay(this));
 
 	// For the default overlay we dont need to do anything because it is, well ... the default
 
@@ -971,7 +973,7 @@ void MyFrame::OnMouseRightUp(wxMouseEvent &event)
 	else
 		s = "UNKNOWN";
 
-	wxDockingGlobalState const &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState const &gs = wxDockingState::GetInstance();
 	wxDockingEntityState const &ps = gs.PanelState(p);
 	wxDockingEntityState const &ctrls = gs.PanelState(ctrl);
 	if (!s.empty())
@@ -1141,7 +1143,7 @@ void MyFrame::OnToggleDragPanel(wxCommandEvent &WXUNUSED(evt))
 	wxSizeReportCtrl *panel = GetActivePanel();
 	if (panel)
 	{
-		wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+		wxDockingState &gs = wxDockingState::GetInstance();
 		wxDockingEntityState &ps = gs.PanelState(m_activePanel);
 		ps.SetDraggable(!ps.IsDraggable());
 	}
@@ -1157,7 +1159,7 @@ void MyFrame::OnToggleContainerLock(wxCommandEvent &WXUNUSED(evt))
 	if (!m_activeContainer)
 		return;
 
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 	wxDockingEntityState &ps = gs.PanelState(m_activeContainer);
 	ps.SetLocked(!ps.IsLocked());
 }
@@ -1195,7 +1197,7 @@ void MyFrame::createInitialLayout()
 		, createSizeReportCtrl("Ctrl1.1")
 	);
 
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 	gs.SetLock(rootTab);
 	rootTab = AddPanel(wxDockingInfo("Size Report 1.2")
 		.SetPanel(rootTab)

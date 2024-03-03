@@ -1,5 +1,5 @@
-#ifndef _WX_DOCKING_GLOBALSTATE_H_
-#define _WX_DOCKING_GLOBALSTATE_H_
+#ifndef _WX_DOCKING_STATE_H_
+#define _WX_DOCKING_STATE_H_
 
 #if wxUSE_DOCKING
 
@@ -7,15 +7,16 @@
 #include <wx/docking/dockingevent.h>
 #include <wx/docking/dockingentity.h>
 #include <wx/docking/dockingutils.h>
+#include <wx/docking/dockingoverlay.h>
 
 typedef wxDockingUtils::wxUniqueVector<wxDockingEntityState> wxDockingEntityStates;
 typedef wxDockingUtils::wxUniqueVector<wxDockingFrame *> wxDockingFrames;
 
-class WXDLLIMPEXP_DOCKING wxDockingGlobalState
+class WXDLLIMPEXP_DOCKING wxDockingState
 {
 public:
-	wxDockingGlobalState();
-	static wxDockingGlobalState &GetInstance();
+	wxDockingState();
+	static wxDockingState &GetInstance();
 
 	/**
 	 * IsDragging is set to true, when the mouse button has been pressed and the mouse has moved in the meantime. This
@@ -82,6 +83,24 @@ public:
 	bool IsDraggable(wxDockingEntity const &panel) const;
 	void SetDraggable(wxDockingEntity const &panel, bool dragging = true);
 
+	bool IsMouseCaptured() const { return m_mouseCaptured; }
+	void SetMouseCaptured(bool flag) { m_mouseCaptured = flag; }
+
+	bool IgnoreDocking() const { return m_ignoreDocking; }
+	void SetIgnoreDocking(bool flag) { m_ignoreDocking = flag; }
+
+	bool WaitMouseBtnUp() const { return m_waitMouseBtnUp; }
+	void SetWaitMouseBtnUp(bool flag) { m_waitMouseBtnUp = flag; }
+
+	/**
+	 * This is set, if an overlay handler was installed. This is even then the case, when the
+	 * client called it with a null pointer, thus disabling overlays, which is a valid szenario.
+	 */
+	bool HasOverlayHandler() const { return m_hasOverlayHandler; }
+	void SetOverlayHandler(wxIDockingOverlay *overlayHandler, bool hasHandler = true) { m_overlayHandler.reset(overlayHandler); m_hasOverlayHandler = hasHandler; }
+	wxIDockingOverlay *GetOverlayHandler() const {  return HasOverlayHandler() ? m_overlayHandler.get() : nullptr; }
+	wxIDockingOverlay *GetOverlayHandler() { return m_overlayHandler.get(); }
+
 	// Since this class represents only an internal state, we don't provide getters and setters (for now)
 public:
 	wxDockingEvent event;					// Record the current state of the docking parameters
@@ -89,16 +108,18 @@ public:
 	wxDockingEntityStates panels;			// Panels which have to be tracked
 	wxPoint draggingPos;					// Position where we want to check the dragging against.
 
-	bool mouseCaptured:1;
-	bool ignoreDocking:1;					// If the start event is vetoed we no longer track this until the mouse is released.
-	bool waitMouseBtnUp:1;
-
 private:
+	std::unique_ptr<wxIDockingOverlay> m_overlayHandler;
+	bool m_mouseCaptured:1;
+	bool m_ignoreDocking:1;					// If the start event is vetoed we no longer track this until the mouse is released.
+	bool m_waitMouseBtnUp:1;
 	bool m_checkDragging:1;					// When the mousebutton is pressed we have to check if a dragging is starting
 	bool m_isDragging:1;					// Dragging has been activated. This will only be set once per dragging operation
+	bool m_hasOverlayHandler : 1;			// Set if an overlayhandler is available. This is needed because a nullptr may
+											// also be used as a handler which disables it.
 
 private:
-	wxDECLARE_NO_COPY_CLASS(wxDockingGlobalState);
+	wxDECLARE_NO_COPY_CLASS(wxDockingState);
 };
 
 #endif // wxUSE_DOCKING

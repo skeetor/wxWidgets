@@ -23,7 +23,6 @@ wxDockingEvent::wxDockingEvent(wxEventType type)
 : wxNotifyEvent(type)
 , m_frame(nullptr)
 , m_dockingAllow(true)
-, m_hasOverlayHandler(false)
 {
 }
 
@@ -37,8 +36,6 @@ void wxDockingEvent::Assign(const wxDockingEvent &event)
 	m_tgt = event.m_tgt;
 	m_eventPos = event.m_eventPos;
 	m_dockingAllow = event.m_dockingAllow;
-	m_hasOverlayHandler = event.m_hasOverlayHandler;
-	m_overlayHandler = event.m_overlayHandler;
 }
 
 wxDockingEventFilter::wxDockingEventFilter()

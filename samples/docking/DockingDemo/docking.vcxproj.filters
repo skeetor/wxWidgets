@@ -59,7 +59,7 @@
     <ClCompile Include="custom_buttonoverlay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wx\docking\dockingglobalstate.cpp">
+    <ClCompile Include="..\wx\docking\dockingtate.cpp">
       <Filter>Source Files\wx\docking</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,7 +107,7 @@
     <ClInclude Include="custom_buttonoverlay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\wx\include\wx\docking\dockingglobalstate.h">
+    <ClInclude Include="..\wx\include\wx\docking\dockingstate.h">
       <Filter>Header Files\wx\docking</Filter>
     </ClInclude>
     <ClInclude Include="..\wx\include\wx\docking\dockingoverlay.h">

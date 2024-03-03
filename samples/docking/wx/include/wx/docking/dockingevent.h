@@ -67,15 +67,6 @@ public:
 	void SetDockingAllow(bool allow = true) { m_dockingAllow = allow; }
 	bool IsDockingAllowed() const { return m_dockingAllow; }
 
-	/**
-	 * This is set, if an overlay handler was installed. This is even then the case, when the
-	 * client called it with a null pointer, thus disabling overlays, which is a valid szenario.
-	 */
-	bool HasOverlayHandler() const { return m_hasOverlayHandler; }
-	void SetOverlayHandler(std::shared_ptr<wxIDockingOverlay> const &overlayHandler, bool hasHandler = true) { m_overlayHandler = overlayHandler; m_hasOverlayHandler = hasHandler; }
-	std::shared_ptr<wxIDockingOverlay> const &GetOverlayHandler() const { return m_overlayHandler;  }
-	std::shared_ptr<wxIDockingOverlay> GetOverlayHandler() { return m_overlayHandler;  }
-
 public: // wxWdgets overrides
 	wxDockingEvent *Clone() const wxOVERRIDE { return new wxDockingEvent(*this); }
 	wxEventCategory GetEventCategory() const wxOVERRIDE { return wxEVT_CATEGORY_USER_INPUT; }
@@ -86,7 +77,6 @@ protected:
 private:
 	wxDockingFrame *m_frame;		// The current frame.
 	wxWindow *m_windowAtPoint;
-	std::shared_ptr<wxIDockingOverlay> m_overlayHandler;
 
 	// The source panel we potentially want to move in an docking event. This field
 	// should never be modified by an event handler and is initialized only at the
@@ -107,7 +97,6 @@ private:
 	wxPoint m_eventPos;				// Screencoordinates of the mouse for this event
 
 	bool m_dockingAllow:1;			// Flag if docking is allowed at the target.
-	bool m_hasOverlayHandler:1;
 
 	wxDECLARE_DYNAMIC_CLASS(wxDockingEvent);
 };

@@ -22,7 +22,7 @@ static wxColor gColorBlue(wxDOCKING_HINT_FLOATING_RED, wxDOCKING_HINT_FLOATING_G
 static wxColor gColorGreen(wxDOCKING_HINT_ALLOW_RED, wxDOCKING_HINT_ALLOW_GREEN, wxDOCKING_HINT_ALLOW_BLUE);
 static wxBrush gGreenBrush(wxColor(wxDOCKING_HINT_ALLOW_RED, wxDOCKING_HINT_ALLOW_GREEN, wxDOCKING_HINT_ALLOW_BLUE));
 
-static void PrintDebugBar(wxDockingEvent const &event, wxDockingGlobalState const &globalState)
+static void PrintDebugBar(wxDockingEvent const &event, wxDockingState const &globalState)
 {
 	wxPoint mousePos = event.GetEventPos();
 	wxDockingInfo const &src = event.GetSource();
@@ -48,7 +48,7 @@ static void PrintDebugBar(wxDockingEvent const &event, wxDockingGlobalState cons
 		//<< "Area: " << wr.x << "/" << wr.y << "/" << wr.width << "/" << wr.height << " "
 		//<< "Type: " << w.GetType() << " "
 		;
-	wxDockingGlobalState::GetInstance().frames[0]->SetStatusText(s);
+	wxDockingState::GetInstance().frames[0]->SetStatusText(s);
 }
 
 // ------------------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ wxDockingFrame::~wxDockingFrame()
 	// We bind our eventhandler only to the first frame and this will handle all docking needs.
 	// However, if there are multiple frames, it can happen that the first frame gets destroyed.
 	// In this case we need to pass the eventhandler on to another frame to take over.
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 	if (gs.frames[0] == this)
 	{
 		UnbindEventHandlers();
@@ -132,7 +132,7 @@ void wxDockingFrame::init()
 
 void wxDockingFrame::RemoveFrameEntry() const
 {
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 
 	for (wxVector<wxDockingFrame *>::iterator it = gs.frames.begin(); it != gs.frames.end(); ++it)
 	{
@@ -153,7 +153,7 @@ bool wxDockingFrame::Create(wxWindow *parent, wxWindowID id, const wxString &tit
 	if (!wxFrame::Create(parent, id, title, pos, size, style, name))
 		return false;
 
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 
 	// Register the frame in our list. Should be done first thing after initializing our frame.
 	// We also register it as a known window, as it is of course also a potential docking target.
@@ -175,7 +175,7 @@ bool wxDockingFrame::Create(wxWindow *parent, wxWindowID id, const wxString &tit
 void wxDockingFrame::BindEventHandlers()
 {
 	// We only bind our event handlers for the main frame.
-	if (wxDockingGlobalState::GetInstance().frames[0] != this)
+	if (wxDockingState::GetInstance().frames[0] != this)
 		return;
 
 	wxApp *app = static_cast<wxApp *>(wxApp::GetInstance());
@@ -191,7 +191,7 @@ void wxDockingFrame::BindEventHandlers()
 
 void wxDockingFrame::UnbindEventHandlers()
 {
-	if (wxDockingGlobalState::GetInstance().frames[0] != this)
+	if (wxDockingState::GetInstance().frames[0] != this)
 		return;
 
 	wxApp *app = static_cast<wxApp *>(wxApp::GetInstance());
@@ -467,7 +467,7 @@ wxDockingEntity wxDockingFrame::CreateTabPanel(wxDockingInfo const &info, wxDock
 
 bool wxDockingFrame::AttachTabPage(wxDockingInfo const &info, wxDockingEntity const &notebook, wxDockingEntity const &userWindow) const
 {
-	wxDockingGlobalState const &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState const &gs = wxDockingState::GetInstance();
 	wxNotebook *nb = notebook.GetNotebook();
 
 	wxCHECK_MSG(nb, false, wxT("Notebook may not be nullptr"));
@@ -758,7 +758,7 @@ wxDockingEntity wxDockingFrame::AddFloatPanel(wxDockingInfo const &info, wxDocki
 
 	userWindow->Reparent(frame);
 	inf.Clear();
-	inf.SetTitle(wxDockingGlobalState::GetInstance().PanelState(userWindow).GetTitle());
+	inf.SetTitle(wxDockingState::GetInstance().PanelState(userWindow).GetTitle());
 	inf.SetWindow(nullptr);
 	inf.SetForcePanel(true);
 
@@ -852,7 +852,7 @@ wxDockingEntity wxDockingFrame::AddPanel(wxDockingInfo const &info, wxDockingEnt
 
 	if (userWindow)
 	{
-		wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+		wxDockingState &gs = wxDockingState::GetInstance();
 		wxDockingEntityState &st = gs.panels.append(userWindow);
 		st.SetTitle(info.GetTitle());
 		userWindow->Show();
@@ -945,7 +945,7 @@ bool wxDockingFrame::RemovePanel(wxDockingEntity panel, wxDockingEntity const &w
 		break;
 	}
 
-	wxDockingGlobalState::GetInstance().panels.remove(window);
+	wxDockingState::GetInstance().panels.remove(window);
 
 	return success;
 }
@@ -991,7 +991,7 @@ bool wxDockingFrame::MovePanel(wxDockingInfo const &src, wxDockingInfo const &tg
 		sp = sw->GetParent();
 	}
 
-	wxString title = wxDockingGlobalState::GetInstance().PanelState(sw).GetTitle();
+	wxString title = wxDockingState::GetInstance().PanelState(sw).GetTitle();
 	wxDockingFrame *frame = src.GetFrame();
 	wxCHECK_MSG(frame->RemovePanel(sp, sw), false, wxT("Failed to remove source panel!"));
 
@@ -1092,7 +1092,7 @@ bool wxDockingFrame::RemoveFromSplitter(wxDockingEntity const &splitterPanel, wx
 		wxCHECK_MSG(false, false, wxT("Panel is not a splitter"));
 	}
 
-	wxDockingGlobalState const &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState const &gs = wxDockingState::GetInstance();
 	wxDockingEntity otherWindow = splitter->GetWindow1();
 	if (otherWindow == window)
 		otherWindow = splitter->GetWindow2();
@@ -1147,7 +1147,7 @@ bool wxDockingFrame::RemoveFromNotebook(wxDockingEntity const &notebookPanel, wx
 	if (pageIndex == wxNOT_FOUND)
 		return false;
 
-	wxDockingGlobalState const &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState const &gs = wxDockingState::GetInstance();
 	bool success = false;
 
 	notebook->RemovePage(pageIndex);
@@ -1207,7 +1207,7 @@ bool wxDockingFrame::MoveToPanel(wxDockingEntity const &newPanel, wxDockingEntit
 		{
 			wxNotebook *parent = newPanel.GetNotebook();
 			size_t sel = parent->FindPage(panel);
-			wxString title = wxDockingGlobalState::GetInstance().PanelState(window).GetTitle();
+			wxString title = wxDockingState::GetInstance().PanelState(window).GetTitle();
 			parent->RemovePage(sel);
 			parent->InsertPage(sel, window, title, false);
 		}
@@ -1316,7 +1316,7 @@ bool wxDockingFrame::CheckChildState(wxDockingInfo const &src, wxDockingInfo con
 
 bool wxDockingFrame::SendDockingStart()
 {
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 
 	gs.event.SetEventType(wxEVT_DOCKING_START);
 	gs.event.Allow();
@@ -1339,7 +1339,7 @@ void wxDockingFrame::OnDockingStart(wxDockingEvent &event)
 
 void wxDockingFrame::SendDockingEnd()
 {
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 
 	gs.event.SetEventType(wxEVT_DOCKING_END);
 	gs.event.Allow();
@@ -1592,14 +1592,14 @@ void wxDockingFrame::InitTarget(wxDockingEvent &event)
 
 	wxWindow *pointWindow = event.GetWindowAtPoint();
 
-	bool found = tgt.FromPoint(mousePos, event.GetFrame(), &pointWindow);
+	tgt.FromPoint(mousePos, event.GetFrame(), &pointWindow);
 	event.SetWindowAtPoint(pointWindow);
 
 	// We save the current target as a backup, so we can use it in if no appropriate target is found.
 	// This can happen i.e. if the mouse is moved outside the window while dragging, which means that the current target
 	// should be still valid.
 	wxDockingEntity const &tw = tgt.GetDockingEntity();
-	if (tw != nullptr && wxDockingGlobalState::GetInstance().IsKnownPanel(tw))
+	if (tw != nullptr && wxDockingState::GetInstance().IsKnownPanel(tw))
 	{
 		event.SetLastKnownTarget(tgt);
 		tgt.SetDirection(wxALL);
@@ -1616,7 +1616,8 @@ void wxDockingFrame::InitTarget(wxDockingEvent &event)
 void wxDockingFrame::OnTrackMove(wxDockingEvent &event)
 {
 	wxDockingInfo &tgt = event.GetTarget();
-	std::shared_ptr<wxIDockingOverlay> overlay = event.GetOverlayHandler();
+	wxDockingState &gs = wxDockingState::GetInstance();
+	wxIDockingOverlay *overlay = gs.GetOverlayHandler();
 	if (overlay)
 		overlay->ProcessOverlay(event);
 
@@ -1685,7 +1686,7 @@ void wxDockingFrame::OnTrackMove(wxDockingEvent &event)
 	event.SetDockingAllow(allow);
 
 	// TODO: Debugging only
-	PrintDebugBar(event, wxDockingGlobalState::GetInstance());
+	PrintDebugBar(event, wxDockingState::GetInstance());
 }
 
 void wxDockingFrame::OnUpdateHint(wxDockingEvent &event)
@@ -1713,7 +1714,7 @@ void wxDockingFrame::OnUpdateHint(wxDockingEvent &event)
 
 void wxDockingFrame::OnMouseCaptureLost(wxMouseCaptureLostEvent &WXUNUSED(event))
 {
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 
 	// In case the mouse capture was lost, the docking handling is canceled. We still send the
 	// end event, so the user may have to change to do some cleanup in case it relies on it.
@@ -1725,14 +1726,14 @@ void wxDockingFrame::OnMouseCaptureLost(wxMouseCaptureLostEvent &WXUNUSED(event)
 
 	// If we loose the capture, we want to make sure that the button has been released, so we don't trigger
 	// a new docking event if the moose is over one of our windows.
-	gs.waitMouseBtnUp = true;
-	gs.mouseCaptured = false;
+	gs.SetWaitMouseBtnUp(true);
+	gs.SetMouseCaptured(false);
 	gs.ResetDragging();
 }
 
 int wxDockingFrame::OnMouseLeftDown(wxMouseEvent &WXUNUSED(event))
 {
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 
 	// Record where the mouse was pressed, so we can determine wether the mouse will be dragged.
 	gs.draggingPos = ::wxGetMousePosition();
@@ -1746,17 +1747,17 @@ int wxDockingFrame::OnMouseLeftDown(wxMouseEvent &WXUNUSED(event))
 
 int wxDockingFrame::OnMouseLeftUp(wxMouseEvent &WXUNUSED(event))
 {
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 
-	gs.ignoreDocking = false;
-	gs.waitMouseBtnUp = false;
+	gs.SetIgnoreDocking(false);
+	gs.SetWaitMouseBtnUp(false);
 
 	gs.ResetDragging();
 
 	wxPoint mousePos = ::wxGetMousePosition();
 	gs.event.SetEventPos(mousePos);
 
-	if (gs.mouseCaptured)
+	if (gs.IsMouseCaptured())
 		EndDocking(mousePos, true);
 
 	return wxEventFilter::Event_Skip;
@@ -1764,7 +1765,7 @@ int wxDockingFrame::OnMouseLeftUp(wxMouseEvent &WXUNUSED(event))
 
 void wxDockingFrame::EndDocking(wxPoint const &mousePos, bool affirm)
 {
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 
 	wxDockingEvent &event = gs.event;
 	wxDockingInfo const &src = event.GetSource();
@@ -1789,14 +1790,14 @@ void wxDockingFrame::EndDocking(wxPoint const &mousePos, bool affirm)
 	SendDockingEnd();
 
 	ReleaseMouse();
-	gs.mouseCaptured = false;
+	gs.SetMouseCaptured(false);
 }
 
 int wxDockingFrame::OnMouseMove(wxMouseEvent &event)
 {
-	wxDockingGlobalState &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
 
-	if (gs.waitMouseBtnUp)
+	if (gs.WaitMouseBtnUp())
 	{
 		if (event.ButtonIsDown(wxMOUSE_BTN_LEFT))
 		{
@@ -1804,11 +1805,11 @@ int wxDockingFrame::OnMouseMove(wxMouseEvent &event)
 			return wxEventFilter::Event_Skip;
 		}
 
-		gs.waitMouseBtnUp = false;
+		gs.SetWaitMouseBtnUp(false);
 	}
 
 	wxPoint mousePos = ::wxGetMousePosition();
-	if (gs.ignoreDocking || !(gs.IsDragging() && event.ButtonIsDown(wxMOUSE_BTN_LEFT)))
+	if (gs.IgnoreDocking() || !(gs.IsDragging() && event.ButtonIsDown(wxMOUSE_BTN_LEFT)))
 	{
 		event.Skip();
 		return wxEventFilter::Event_Skip;
@@ -1816,7 +1817,7 @@ int wxDockingFrame::OnMouseMove(wxMouseEvent &event)
 
 	gs.event.SetDockingAllow(false);
 
-	if (gs.mouseCaptured)
+	if (gs.IsMouseCaptured())
 	{
 		// For debugging set breakpoint here and enter the desired mouse coordinates. Window must be uncovered
 		// before continuing, otherwise FromPoint will not work as it only finds the debugger window.
@@ -1838,7 +1839,7 @@ int wxDockingFrame::OnMouseMove(wxMouseEvent &event)
 		if (cw && cw != this)
 		{
 			event.Skip();
-			gs.ignoreDocking = true;
+			gs.SetIgnoreDocking(true);
 			return wxEventFilter::Event_Skip;
 		}
 
@@ -1846,12 +1847,12 @@ int wxDockingFrame::OnMouseMove(wxMouseEvent &event)
 		if (!src.FromPoint(mousePos, nullptr, &pointWindow))
 		{
 			event.Skip();
-			gs.mouseCaptured = false;
-			gs.ignoreDocking = true;
+			gs.SetMouseCaptured(false);
+			gs.SetIgnoreDocking(true);
 			return wxEventFilter::Event_Skip;
 		}
 
-		gs.mouseCaptured = true;
+		gs.SetMouseCaptured(true);
 		CaptureMouse();
 
 		gs.event.SetFrame(src.GetFrame());
@@ -1861,8 +1862,8 @@ int wxDockingFrame::OnMouseMove(wxMouseEvent &event)
 		{
 			ReleaseMouse();
 			event.Skip();
-			gs.mouseCaptured = false;
-			gs.ignoreDocking = true;
+			gs.SetMouseCaptured(false);
+			gs.SetIgnoreDocking(true);
 			return wxEventFilter::Event_Skip;
 		}
 	}
@@ -1873,7 +1874,7 @@ int wxDockingFrame::OnMouseMove(wxMouseEvent &event)
 
 bool wxDockingFrame::DockingStartCondition(wxPoint const &mousePos) const
 {
-	wxDockingGlobalState const &gs = wxDockingGlobalState::GetInstance();
+	wxDockingState const &gs = wxDockingState::GetInstance();
 	wxDockingInfo const &src = gs.event.GetSource();
 	wxDockingEntity const &dockingSource = src.GetDockingEntity();
 
@@ -1888,19 +1889,20 @@ bool wxDockingFrame::DockingStartCondition(wxPoint const &mousePos) const
 
 void wxDockingFrame::BeginTracking(wxDockingEvent &event)
 {
+	wxDockingState &gs = wxDockingState::GetInstance();
+
 	m_curPanel = wxDockingEntity();
 	m_curDirection = wxALL;
 	m_curAllow = true;
 	m_mousePos = event.GetEventPos();
 
-	if (!event.HasOverlayHandler())
-		event.SetOverlayHandler(std::move(std::make_shared<wxDockingButtonOverlay>(this)));
+	if (!gs.HasOverlayHandler())
+		gs.SetOverlayHandler(new wxDockingButtonOverlay(this));
 
 	wxWindow *w = event.GetSource().GetWindow();
 	wxClientDC dc(w);
 	wxRect rect = w->GetClientRect();
 	wxDockingUtils::GrabScreenshot(dc, rect, m_sourceWindow);
-	wxDockingGlobalState const &gs = wxDockingGlobalState::GetInstance();
 	m_screenWindow = std::make_unique<wxFrame>(nullptr, wxID_ANY, gs.PanelState(w).GetTitle());
 
 	wxScreenDC::StartDrawingOnTop();
@@ -1908,7 +1910,8 @@ void wxDockingFrame::BeginTracking(wxDockingEvent &event)
 
 void wxDockingFrame::EndTracking(wxDockingEvent &event)
 {
-	event.SetOverlayHandler(nullptr, false);
+	wxDockingState &gs = wxDockingState::GetInstance();
+	gs.SetOverlayHandler(nullptr, false);
 
 	wxRect r;
 	wxDockingEntity p;

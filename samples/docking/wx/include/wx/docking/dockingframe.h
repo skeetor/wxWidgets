@@ -12,7 +12,7 @@
 #include <wx/docking/docking_defs.h>
 #include <wx/docking/dockingevent.h>
 #include <wx/docking/dockinginfo.h>
-#include <wx/docking/dockingglobalstate.h>
+#include <wx/docking/dockingstate.h>
 #include <wx/docking/dockingoverlay.h>
 
 /**

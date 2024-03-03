@@ -1,27 +1,28 @@
 
 #if wxUSE_DOCKING
 
-#include <wx/docking/dockingglobalstate.h>
+#include <wx/docking/dockingstate.h>
 
 static wxDockingEntityState gDummyPanelState;
-static wxDockingGlobalState gGlobals;
+static wxDockingState gGlobals;
 
-wxDockingGlobalState &wxDockingGlobalState::GetInstance()
+wxDockingState &wxDockingState::GetInstance()
 {
 	return gGlobals;
 }
 
-wxDockingGlobalState::wxDockingGlobalState()
+wxDockingState::wxDockingState()
 	: draggingPos()
-	, mouseCaptured(false)
-	, ignoreDocking(false)
-	, waitMouseBtnUp(false)
+	, m_mouseCaptured(false)
+	, m_ignoreDocking(false)
+	, m_waitMouseBtnUp(false)
 	, m_checkDragging(false)
 	, m_isDragging(false)
+	, m_hasOverlayHandler(false)
 {
 }
 
-void wxDockingGlobalState::SetLock(wxDockingEntity const &panel, bool locked)
+void wxDockingState::SetLock(wxDockingEntity const &panel, bool locked)
 {
 	wxDockingEntityStates::iterator pos = std::find(panels.begin(), panels.end(), panel);
 
@@ -39,7 +40,7 @@ void wxDockingGlobalState::SetLock(wxDockingEntity const &panel, bool locked)
 	ps.SetLocked(locked);
 }
 
-bool wxDockingGlobalState::IsLocked(wxDockingEntity const &panel) const
+bool wxDockingState::IsLocked(wxDockingEntity const &panel) const
 {
 	wxDockingEntityStates::const_iterator pos = std::find(panels.begin(), panels.end(), panel);
 
@@ -51,7 +52,7 @@ bool wxDockingGlobalState::IsLocked(wxDockingEntity const &panel) const
 	return ps.IsLocked();
 }
 
-void wxDockingGlobalState::SetDraggable(wxDockingEntity const &panel, bool dragging)
+void wxDockingState::SetDraggable(wxDockingEntity const &panel, bool dragging)
 {
 	wxDockingEntityStates::iterator pos = std::find(panels.begin(), panels.end(), panel);
 
@@ -69,7 +70,7 @@ void wxDockingGlobalState::SetDraggable(wxDockingEntity const &panel, bool dragg
 	ps.SetDraggable(dragging);
 }
 
-bool wxDockingGlobalState::IsDraggable(wxDockingEntity const &panel) const
+bool wxDockingState::IsDraggable(wxDockingEntity const &panel) const
 {
 	wxDockingEntityStates::const_iterator pos = std::find(panels.begin(), panels.end(), panel);
 
@@ -81,14 +82,14 @@ bool wxDockingGlobalState::IsDraggable(wxDockingEntity const &panel) const
 	return ps.IsDraggable();
 }
 
-bool wxDockingGlobalState::IsKnownPanel(wxDockingEntity const &panel) const
+bool wxDockingState::IsKnownPanel(wxDockingEntity const &panel) const
 {
 	bool isKnown = false;
 	PanelState(panel, &isKnown);
 	return isKnown;
 }
 
-wxDockingEntityState &wxDockingGlobalState::PanelState(wxDockingEntity const &panel, bool force, bool *found)
+wxDockingEntityState &wxDockingState::PanelState(wxDockingEntity const &panel, bool force, bool *found)
 {
 	wxDockingEntityStates::iterator pos = std::find(panels.begin(), panels.end(), panel);
 
@@ -114,7 +115,7 @@ wxDockingEntityState &wxDockingGlobalState::PanelState(wxDockingEntity const &pa
 	return *pos;
 }
 
-wxDockingEntityState const &wxDockingGlobalState::PanelState(wxDockingEntity const &panel, bool *found) const
+wxDockingEntityState const &wxDockingState::PanelState(wxDockingEntity const &panel, bool *found) const
 {
 	wxDockingEntityStates::const_iterator pos = std::find(panels.begin(), panels.end(), panel);
 

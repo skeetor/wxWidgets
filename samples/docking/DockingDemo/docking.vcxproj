@@ -512,7 +512,7 @@
     <ClCompile Include="..\wx\docking\dockingbutton.cpp" />
     <ClCompile Include="..\wx\docking\dockingevent.cpp" />
     <ClCompile Include="..\wx\docking\dockingframe.cpp" />
-    <ClCompile Include="..\wx\docking\dockingglobalstate.cpp" />
+    <ClCompile Include="..\wx\docking\dockingtate.cpp" />
     <ClCompile Include="..\wx\docking\dockinginfo.cpp" />
     <ClCompile Include="..\wx\docking\dockingentity.cpp" />
     <ClCompile Include="..\wx\docking\dockingutils.cpp" />
@@ -532,7 +532,7 @@
     <ClInclude Include="..\wx\include\wx\docking\dockingbutton.h" />
     <ClInclude Include="..\wx\include\wx\docking\dockingevent.h" />
     <ClInclude Include="..\wx\include\wx\docking\dockingframe.h" />
-    <ClInclude Include="..\wx\include\wx\docking\dockingglobalstate.h" />
+    <ClInclude Include="..\wx\include\wx\docking\dockingstate.h" />
     <ClInclude Include="..\wx\include\wx\docking\dockinginfo.h" />
     <ClInclude Include="..\wx\include\wx\docking\dockingentity.h" />
     <ClInclude Include="..\wx\include\wx\docking\dockingoverlay.h" />
