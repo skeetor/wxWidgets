@@ -18,7 +18,7 @@ class WXDLLIMPEXP_DOCKING wxDockingButtonOverlay
 	: public wxIDockingOverlay
 {
 public:
-	wxDockingButtonOverlay(wxWindow *parent);
+	wxDockingButtonOverlay(wxDockingFrame *parent);
 	~wxDockingButtonOverlay() override;
 
 	void ProcessOverlay(wxDockingEvent &event) override;
@@ -36,13 +36,13 @@ protected:
 
 	wxDockingButton const *GetTopPanelButton() const { return m_topPanel.get(); }
 	wxDockingButton *GetTopPanelButton() { return m_topPanel.get(); }
-	wxWindow *GetParent() const { return m_parent; }
+	wxDockingFrame *GetParent() const { return m_parent; }
 
 private:
 	void DoLayout(wxDockingEntity const &target);
 
 private:
-	wxWindow *m_parent;
+	wxDockingFrame *m_parent;
 	std::unique_ptr<wxDockingButton> m_topPanel;
 };
 

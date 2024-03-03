@@ -11,7 +11,7 @@ class WXDLLIMPEXP_DOCKING CustomOverlay
 	: public wxDockingButtonOverlay
 {
 public:
-	CustomOverlay(wxWindow *parent);
+	CustomOverlay(wxDockingFrame *parent);
 	~CustomOverlay() override;
 
 	void ProcessOverlay(wxDockingEvent &event) override;
@@ -20,7 +20,7 @@ public:
 protected:
 	void Init();
 
-	void DoLayout(wxDockingEntity const &target, wxDockingEntity const &frame);
+	void DoLayout(wxDockingEntity const &target);
 	bool IsButtonHit(wxDockingEvent const &event) override;
 	bool ButtonHitUpdate(wxDockingEvent &event) override;
 	void Hide() override;

@@ -31,7 +31,7 @@ static wxBitmap wxDockingDownBMP(wxDockingDown);
 static wxBitmap wxDockingLeftBMP(wxDockingLeft);
 static wxBitmap wxDockingRightBMP(wxDockingRight);
 
-CustomOverlay::CustomOverlay(wxWindow *parent)
+CustomOverlay::CustomOverlay(wxDockingFrame *parent)
 	: wxDockingButtonOverlay(parent)
 	, m_parent(parent)
 {
@@ -117,7 +117,7 @@ void CustomOverlay::ProcessOverlay(wxDockingEvent &event)
 
 	wxDockingInfo &tgt = event.GetTarget();
 	wxDockingEntity tw = tgt.GetDockingEntity();
-	DoLayout(tw, tgt.GetFrame());
+	DoLayout(tw);
 	Show();
 }
 
@@ -239,7 +239,7 @@ void CustomOverlay::CalcSize()
 	m_buttonRect.x += m_topToBottom[0]->GetSize().GetWidth();
 }
 
-void CustomOverlay::DoLayout(wxDockingEntity const &target, wxDockingEntity const &frame)
+void CustomOverlay::DoLayout(wxDockingEntity const &target)
 {
 	// We assume that all buttons have the same height and width.
 	wxSize bsz = m_topToBottom[0]->GetSize();

@@ -7,9 +7,9 @@
 
 static wxBitmap wxDockingUpBMP(wxDockingUp);
 
-wxDockingButtonOverlay::wxDockingButtonOverlay(wxWindow *parent)
+wxDockingButtonOverlay::wxDockingButtonOverlay(wxDockingFrame *parent)
 : m_parent(parent)
-, m_topPanel(std::make_unique<wxDockingButton>(parent, &wxDockingUpBMP))
+, m_topPanel(std::make_unique<wxDockingButton>((wxWindow *)parent, &wxDockingUpBMP))
 {
 }
 
@@ -45,10 +45,7 @@ void wxDockingButtonOverlay::ProcessOverlay(wxDockingEvent &event)
 	wxDockingEntity &tw = tgt.GetWindow();
 	wxNotebook *nb = tw.GetNotebook();
 	if (!nb)
-	{
-		wxDockingEntity &tp = tgt.GetPanel();
-		nb = tp.GetNotebook();
-	}
+		nb = wxDockingUtils::FindParentPanel(tw).GetNotebook();
 
 	if (nb && nb->GetPageCount())
 	{
@@ -80,16 +77,13 @@ bool wxDockingButtonOverlay::ButtonHitUpdate(wxDockingEvent &event)
 	wxDockingEntity &tw = tgt.GetWindow();
 	wxNotebook *nb = tw.GetNotebook();
 	if (!nb)
-	{
-		wxDockingEntity &tp = tgt.GetPanel();
-		nb = tp.GetNotebook();
-	}
+		nb = wxDockingUtils::FindParentPanel(tw).GetNotebook();
 
 	if (nb)
 	{
+		// We can use the tab orientation here because this is where we want to dock to.
 		dir = nb->GetTabOrientation();
-		tgt.SetPanel(nb, wxDOCKING_NOTEBOOK);
-		tgt.SetWindow(tgt.GetPanel());
+		tgt.SetWindow(nb, wxDOCKING_NOTEBOOK);
 	}
 
 	tgt.SetDirection(dir);
