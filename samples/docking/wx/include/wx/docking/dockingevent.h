@@ -46,9 +46,6 @@ public:
 	wxDockingFrame *GetFrame() const { return m_frame; }
 	void SetFrame(wxDockingFrame *frame) { m_frame = frame; }
 
-	wxWindow *GetWindowAtPoint() const { return m_windowAtPoint; }
-	void SetWindowAtPoint(wxWindow *window) { m_windowAtPoint = window; }
-
 	void SetSource(wxDockingInfo const &site) { m_src = site; }
 	const wxDockingInfo &GetSource() const { return m_src; }
 	wxDockingInfo &GetSource() { return m_src; }
@@ -76,7 +73,6 @@ protected:
 
 private:
 	wxDockingFrame *m_frame;		// The current frame.
-	wxWindow *m_windowAtPoint;
 
 	// The source panel we potentially want to move in an docking event. This field
 	// should never be modified by an event handler and is initialized only at the

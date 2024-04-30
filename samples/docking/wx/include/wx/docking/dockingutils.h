@@ -85,11 +85,6 @@ namespace wxDockingUtils
 	WXDLLIMPEXP_DOCKING void GrabScreenshot(wxDC &dc, wxRect const &coordinates, wxBitmap &screenshot);
 
 	/**
-	 * Determine the direction where to dock to based on the mouseposition.
-	 */
-	WXDLLIMPEXP_DOCKING wxDirection FindDirection(wxDockingInfo const &info, wxDockingEntity &window, wxPoint &mousePos);
-
-	/**
 	 * Blend source into target image. Alpha value must be 0 .. 1.
 	 * Both bitmaps must match in size.
 	 */
@@ -100,7 +95,17 @@ namespace wxDockingUtils
 	 */
 	WXDLLIMPEXP_DOCKING bool ApplyFilter(wxColor &color, wxBitmap &target, float alpha);
 
-	WXDLLIMPEXP_DOCKING void PaintRect(wxRect &rect, wxDockingEntity &panel, wxColor rgb = wxColor(0, 200, 0));
+	WXDLLIMPEXP_DOCKING void PaintRect(wxRect &rect, wxDockingEntity const &panel, wxColor rgb = wxColor(0, 200, 0));
+
+	/**
+	 *Return the border aligned rectangles for the tab from a notebook.
+	 */
+	WXDLLIMPEXP_DOCKING wxRect GetAlignedTabRect(wxNotebook *notebook, wxRect const &openRect, wxRect const &pageRect, size_t page);
+
+	/**
+	 * Check if the coordinates are on the sash. The coordinates are in the splitters local window coordinates.
+	 */
+	bool IsOnSash(wxSplitterWindow *splitter, wxPoint const &coordinates);
 
 	/**
 	 * Calculate the scaling factors to fit the desired size.

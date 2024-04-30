@@ -59,7 +59,7 @@ void wxDockingButtonOverlay::ProcessOverlay(wxDockingEvent &event)
 
 bool wxDockingButtonOverlay::IsButtonHit(wxDockingEvent const &event)
 {
-	return event.GetWindowAtPoint() == GetTopPanelButton();
+	return event.GetTarget().GetWindowAtPoint() == GetTopPanelButton();
 }
 
 bool wxDockingButtonOverlay::ButtonHitUpdate(wxDockingEvent &event)

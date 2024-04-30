@@ -31,7 +31,6 @@ void wxDockingEvent::Assign(const wxDockingEvent &event)
 	wxEvent::operator=(event);
 
 	m_frame = event.m_frame;
-	m_windowAtPoint = event.m_windowAtPoint;
 	m_src = event.m_src;
 	m_tgt = event.m_tgt;
 	m_eventPos = event.m_eventPos;

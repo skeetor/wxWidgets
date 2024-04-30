@@ -23,28 +23,11 @@ public:
 
 	/**
 	 * This function will update all fields relevant for the given window which
-	 * is currently docked.
-	 * The specified window can be any child window residing inside the docking
-	 * system (i.E. a button on a panel). If the window is not part of the
-	 * docking system, false is returned.
-	 */
-	bool FromWindow(wxWindow *source, wxDockingFrame *frame);
-
-	/**
-	 * This function will update all fields relevant for the given window which
 	 * is found at the (screen) coordinates.
 	 * If no window is found, then false is returned.
 	 */
-	bool FromPoint(wxPoint coordinates, wxDockingFrame *frame, wxWindow **pointWindow = nullptr)
-	{
-			wxWindow *w = wxFindWindowAtPoint(coordinates);
-
-			// We report the actual found window, as it may be reported differently after evaluation is done.
-			if (pointWindow)
-				*pointWindow = w;
-
-			return FromWindow(w, frame);
-	}
+	bool FromPoint(wxPoint screenCoordinates, wxDockingFrame *frame, wxDockingEntity &lastSelected);
+	bool FromWindow(wxPoint screenCoordinates, wxDockingFrame *frame, wxWindow *pointWindow, wxDockingEntity &lastSelected);
 
 	/**
 	 * Set the default values for all instances.
@@ -60,10 +43,11 @@ public:
 	wxDockingInfo &SetFrame(wxDockingFrame *frame) { m_frame = frame; return *this; }
 	wxDockingFrame *GetFrame() const { return m_frame; }
 
-	wxDockingInfo &SetPanel(wxDockingEntity const &panel) { m_panel = panel; return *this; }
-	wxDockingInfo &SetPanel(wxWindow *panel, wxDockingEntityType type) { m_panel = wxDockingEntity(panel, type); return *this; }
-	wxDockingEntity &GetPanel() { return m_panel; }
-	wxDockingEntity const &GetPanel() const { return m_panel; }
+	wxDockingInfo &SetPanel(wxDockingEntity const &) { wxCHECK_MSG(false, *this, wxT("SetPanel() is deprecated"));; return *this; }
+	wxDockingInfo &SetPanel(wxWindow *, wxDockingEntityType) { wxCHECK_MSG(false, *this, wxT("SetPanel() is deprecated"));; return *this; }
+
+	wxDockingEntity &GetPanel() { static wxDockingEntity w; wxCHECK_MSG(false, w, wxT("GetPanel() is deprecated")); return w; }
+	wxDockingEntity const &GetPanel() const { static wxDockingEntity w; wxCHECK_MSG(false, w, wxT("GetPanel() is deprecated")); return w; }
 
 	wxDockingInfo &SetWindow(wxDockingEntity const &panel) { m_window = panel; return *this; }
 	wxDockingInfo &SetWindow(wxWindow *window, wxDockingEntityType type) { m_window = wxDockingEntity(window, type); return *this; }
@@ -102,13 +86,6 @@ public:
 	bool IsForcePanel() const { return m_forcePanel; }
 	wxDockingInfo &SetForcePanel(bool force) { m_forcePanel = force; return *this; }
 
-	/**
-	 * When a window is splitted and there is no second window, this option will still split the window and put a placeholder in the empty
-	 * area. Default is to create the splitter in unsplitted mode, so it will look like a regular window.
-	 */
-	bool IsForceSplit() const { return m_forceSplit; }
-	wxDockingInfo &SetForceSplit(bool force) { m_forceSplit = force; return *this; }
-
     size_t GetPage() const { return m_page; }
 	void SetPage(size_t page) { m_page = page; }
 
@@ -127,10 +104,17 @@ public:
 	wxDockingInfo &SetSize(wxSize const &size) { m_size = size; return *this; }
 	wxSize GetSize() const { return m_size; }
 
+	wxWindow *GetWindowAtPoint() const { return m_windowAtPoint; }
+	void SetWindowAtPoint(wxWindow *window) { m_windowAtPoint = window; }
+
+protected:
+	void FromNotebook(wxPoint screenCoordinates, wxDockingEntity &notebook);
+	void FromSplitter(wxPoint screenCoordinates, wxDockingEntity &splitter, wxDockingEntity &lastSelected);
+
 private:
 	wxDockingFrame *m_frame;
-	wxDockingEntity m_panel;
-    wxDockingEntity m_window;
+	wxWindow *m_windowAtPoint;
+	wxDockingEntity m_window;
 	wxString m_title;
 	wxDirection m_direction;
 	wxOrientation m_orientation;
@@ -144,7 +128,6 @@ private:
 	bool m_activate:1;
 	bool m_floating:1;
 	bool m_forcePanel : 1;			// Create an appropritate panel even for the initial window. Default is none.
-	bool m_forceSplit : 1;			// Split the windows even when there is no second window yet.
 	bool m_tabArea : 1;				// Is set to true if the mouse is within the tab area.
 									// This does not neccessarily mean that the mouse is over a tab. It can also be in the fre area when there are not enough tabs.
 	bool m_onTab : 1;				// Is set to true if the mouse is over a tab.

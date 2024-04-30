@@ -123,7 +123,7 @@ protected: // Tracking
 
 	void ShowGhostFrame(wxPoint pos, wxSize size);
 	bool UpdateWindowHint(wxDockingEntity &srcWindow, wxDockingEntity &targetWindow, wxPoint pos, wxDirection direction, bool allow);
-	void UpdateTabHint(wxDockingEntity &notebook, size_t page, bool allow, wxPoint const &mousePos, bool onTab);
+	void UpdateTabHint(wxDockingInfo &target, wxPoint const &mousePos, bool allow);
 
 protected: // Events
 	/**
@@ -134,7 +134,7 @@ protected: // Events
 	bool SendDockingStart();
 	void SendDockingEnd();
 
-	void SendCreatePanel(wxDockingInfo &info);
+	void SendCreatePanel(wxDockingInfo &info, wxDockingEntityType type);
 	void SendReleasePanel(wxDockingEntity const &info);
 	void SendMovePanel(wxDockingEvent &event);
 	void SendTrackMove(wxDockingEvent &event);
@@ -221,9 +221,15 @@ protected: // Helpers
 	bool RemoveToolBar(wxToolBar *toolbar, wxDockingInfo const &info);
 
 	/**
-	 * Helper function to create a panel of the specified type.
+	 * Helper function to create a panel of the specified type if no extra parameters are required
 	 */
-	wxDockingInfo CreatePanel(wxDockingInfo const &info, wxDockingEntity &parent, wxDockingEntityType type);
+	wxDockingInfo CreatePanel(wxDockingInfo const &info, wxDockingEntity &parent, wxDockingEntityType type)
+	{
+		wxDockingInfo inf = info;
+		inf.SetWindow(parent);
+		SendCreatePanel(inf, type);
+		return inf;
+	}
 
 	void DoSize();
 
@@ -313,10 +319,7 @@ protected: // Helpers
 	 */
 	bool DockingStartCondition(wxPoint const &mousePos) const;
 
-	bool AdjustTarget(wxDockingInfo &info, wxPoint &mouseCoordinates);
-	bool IsOnSash(wxSplitterWindow *splitter, wxPoint const &coordinates);
-
-	wxRect GetAlignedTabRect(wxNotebook *notebook, wxRect const &openRect, wxRect const &pageRect, size_t page) const;
+	bool UpdateDirection(wxDockingInfo const &src, wxDockingInfo &tgt, wxPoint const &mousePos);
 
 private:
 	void init();

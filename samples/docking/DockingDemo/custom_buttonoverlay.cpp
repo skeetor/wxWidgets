@@ -90,7 +90,7 @@ void CustomOverlay::Hide()
 
 bool CustomOverlay::IsButtonHit(wxDockingEvent const &event)
 {
-	wxWindow *w = event.GetWindowAtPoint();
+	wxWindow *w = event.GetTarget().GetWindowAtPoint();
 
 	for (wxDockingButton *b : m_topToBottom)
 	{
@@ -123,7 +123,7 @@ void CustomOverlay::ProcessOverlay(wxDockingEvent &event)
 
 bool CustomOverlay::ButtonHitUpdate(wxDockingEvent &event)
 {
-	wxWindow *w = event.GetWindowAtPoint();
+	wxWindow *w = event.GetTarget().GetWindowAtPoint();
 
 	if (w == m_topToBottom[IDX_FRAME_TOP])
 	{

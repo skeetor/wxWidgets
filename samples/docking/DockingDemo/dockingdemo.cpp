@@ -1187,12 +1187,10 @@ void MyFrame::createInitialLayout()
 		//.SetTabDirection(wxRIGHT)
 	;
 
-	// The first one is attached to the root panel, so we don't need to specify it.
 	wxDockingEntity rootTab = AddPanel(wxDockingInfo("Size Report 1.1")
-		.SetForcePanel(true)
+		//.SetForcePanel(true)				// The first panel should already appear in a splitter or notebook (this is default)
 		.SetDirection(wxCENTRAL)
 		//.SetDirection(wxRIGHT)
-		//.SetForceSplit(true)				// This will cause the initial panel to be already shown in a splitted state with a placeholder window on the free side.
 		//.SetSize(150, -1)
 		, createSizeReportCtrl("Ctrl1.1")
 	);
@@ -1200,20 +1198,20 @@ void MyFrame::createInitialLayout()
 	wxDockingState &gs = wxDockingState::GetInstance();
 	gs.SetLock(rootTab);
 	rootTab = AddPanel(wxDockingInfo("Size Report 1.2")
-		.SetPanel(rootTab)
+		.SetWindow(rootTab)
 		, createSizeReportCtrl("Ctrl1.2")
 	);
-	//rootTab = AddPanel(wxDockingInfo("Size Report 1.3")
-	//	.SetPanel(rootTab)
-	//	, createSizeReportCtrl("Ctrl1.3")
-	//);
-	//rootTab = AddPanel(wxDockingInfo("Size Report 1.4")
-	//	.SetPanel(rootTab)
-	//	, createSizeReportCtrl("Ctrl1.4")
-	//);
+	rootTab = AddPanel(wxDockingInfo("Size Report 1.3")
+		.SetWindow(rootTab)
+		, createSizeReportCtrl("Ctrl1.3")
+	);
+	rootTab = AddPanel(wxDockingInfo("Size Report 1.4")
+		.SetWindow(rootTab)
+		, createSizeReportCtrl("Ctrl1.4")
+	);
 
 	wxDockingEntity l = AddPanel(wxDockingInfo("Size Report 2.0")
-		.SetPanel(rootTab)
+		.SetWindow(rootTab)
 		.SetDirection(wxRIGHT)
 		.SetSize(150, -1)
 		, createSizeReportCtrl("Ctrl2.0")
@@ -1226,13 +1224,13 @@ void MyFrame::createInitialLayout()
 		, createSizeReportCtrl("Ctrl3.0")
 	);
 	AddPanel(wxDockingInfo("Size Report 4.0")
-		.SetPanel(l)
+		.SetWindow(l)
 		.SetDirection(wxDOWN)
 		.SetSize(-1, 100)
 		, createSizeReportCtrl("Ctrl4.0")
 	);
 	AddPanel(wxDockingInfo("Size Report 5.0")
-		.SetPanel(rootTab)
+		.SetWindow(rootTab)
 		.SetDirection(wxDOWN)
 		.SetSize(-1, 100)
 		, createSizeReportCtrl("Ctrl5.0")

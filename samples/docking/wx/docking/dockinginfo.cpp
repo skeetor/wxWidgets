@@ -6,12 +6,13 @@
 
 #include <wx/docking/dockinginfo.h>
 #include <wx/docking/dockingutils.h>
+#include <wx/docking/dockingstate.h>
 
 static wxDockingInfo gDefaults;
 
 wxDockingInfo::wxDockingInfo(wxString const &title)
 : m_frame(nullptr)
-, m_panel(static_cast<wxWindow *>(nullptr))
+, m_windowAtPoint(nullptr)
 , m_window(static_cast<wxWindow *>(nullptr))
 , m_title(title)
 , m_direction(wxALL)
@@ -21,8 +22,7 @@ wxDockingInfo::wxDockingInfo(wxString const &title)
 , m_page((size_t)-1)
 , m_activate(false)
 , m_floating(false)
-, m_forcePanel(false)
-, m_forceSplit(false)
+, m_forcePanel(true)
 , m_tabArea(false)
 , m_onTab(false)
 {
@@ -46,7 +46,7 @@ void wxDockingInfo::Clear()
 	else
 	{
 		m_frame = nullptr;
-		m_panel = wxDockingEntity();
+		m_windowAtPoint = nullptr;
 		m_title = "";
 		m_window = static_cast<wxWindow *>(nullptr);
 		m_direction = wxALL;
@@ -55,8 +55,7 @@ void wxDockingInfo::Clear()
 		m_size = wxSize(-1, -1);
 		m_activate = false;
 		m_floating = false;
-		m_forcePanel = false;
-		m_forceSplit = false;
+		m_forcePanel = true;
 		m_tabArea = false;
 		m_onTab = false;
 		m_tabDirection = wxTOP;
@@ -68,9 +67,6 @@ wxDockingEntity wxDockingInfo::GetDockingEntity() const
 {
 	if (m_window)
 		return m_window;
-
-	if (m_panel)
-		return m_panel;
 
 	// TODO: Why can't a I pass a framepointer in place of a wxWindow (MSW)???
 	wxDockingEntity p;
@@ -102,42 +98,116 @@ wxDockingInfo &wxDockingInfo::SetOrientation(wxOrientation orientation)
 	return *this;
 }
 
-bool wxDockingInfo::FromWindow(wxWindow *source, wxDockingFrame *frame)
+void wxDockingInfo::FromNotebook(wxPoint coordinates, wxDockingEntity &notebook)
+{
+	wxNotebook *nb = notebook.GetNotebook();
+	SetWindow(notebook);
+	if (!nb->GetPageCount())
+	{
+		SetPage(static_cast<size_t>(wxNOT_FOUND));
+		return;
+	}
+
+	wxWindow *window = nb->GetPage(nb->GetSelection());
+	if (window->GetScreenRect().Contains(coordinates))
+	{
+		// Mouse is on the page
+		SetWindow(window);
+		SetPage(nb->GetSelection());
+		SetTabArea(false);
+		SetOnTab(false);
+		return;
+	}
+
+	wxRect openRect = wxDockingUtils::GetTabOpenArea(nb);
+	wxPoint windowPoint = nb->ScreenToClient(coordinates);
+	//wxDockingUtils::PaintRect(openRect, window);
+	if (openRect.Contains(windowPoint))
+	{
+		// Mouse is in the free area next to the tabs
+		SetPage(static_cast<size_t>(wxNOT_FOUND));
+		SetTabArea(true);
+		SetOnTab(false);
+		return;
+	}
+
+	// Check if the mouse is over a tab.
+	// There may be a small gap between the border and the tab area. HitTest would report this
+	// as NOWHERE, but this means that the target hint will flicker back and forth when the
+	// user moves over it, so we want to avoid it and thus treat this area also as part of
+	// the tab, if applicable. To achieve this, we align the rectangle from the tab with the
+	// border.
+
+	size_t nearestTab = (size_t)wxNOT_FOUND;
+	wxRect notebookRect = nb->GetRect();
+
+	double distance = std::numeric_limits<double>::max();
+	for (size_t i = 0; i < nb->GetPageCount(); i++)
+	{
+		wxRect pageRect = nb->GetPage(i)->GetRect();
+		wxRect tab = wxDockingUtils::GetAlignedTabRect(nb, openRect, pageRect, i);
+		//PaintHint(tab, false, panel);
+		if (tab.Contains(coordinates))
+		{
+			SetPage(i);
+			SetTabArea(true);
+			SetOnTab(true);
+			return;
+		}
+
+		double d = wxDockingUtils::RectDistance(tab, windowPoint);
+		if (d < distance)
+		{
+			distance = d;
+			nearestTab = i;
+		}
+	}
+
+	SetPage(nearestTab);
+	SetTabArea(true);
+	SetOnTab(true);
+}
+
+void wxDockingInfo::FromSplitter(wxPoint coordinates, wxDockingEntity &splitter, wxDockingEntity &lastSelected)
+{
+	wxSplitterWindow *sp = splitter.GetSplitter();
+	wxPoint windowPoint = sp->ScreenToClient(coordinates);
+	if (wxDockingUtils::IsOnSash(sp, windowPoint))
+	{
+		SetWindow(lastSelected);
+		return;
+	}
+}
+
+bool wxDockingInfo::FromPoint(wxPoint coordinates, wxDockingFrame *frame, wxDockingEntity &lastSelected)
 {
 	Clear();
 
-	if (!source)
+	wxWindow *w = wxFindWindowAtPoint(coordinates);
+
+	if (!w)
 		return false;
 
-	wxWindow *dockingSource = nullptr;
+	return FromWindow(coordinates, frame, w, lastSelected);
+}
 
-	// If the source window is not part of a docking panel, we can't do anything about it.
-	wxDockingEntity p = wxDockingUtils::FindParentPanel(source, &dockingSource);
-	if (!p)
+bool wxDockingInfo::FromWindow(wxPoint coordinates, wxDockingFrame *frame, wxWindow *window, wxDockingEntity &lastSelected)
+{
+	Clear();
+
+	SetWindowAtPoint(window);
+	wxDockingEntity source(window);
+
+	wxDockingState const &gs = wxDockingState::GetInstance();
+	if (!window || !gs.IsKnownPanel(source))
 		return false;
 
-	SetWindow(dockingSource);
-	SetPanel(p);
-
-	wxDockingEntityType panelType = p.GetType();
-
-	if (panelType == wxDOCKING_NOTEBOOK)
-	{
-		if (dockingSource)
-		{
-			wxNotebook *nb = p.GetNotebook();
-			SetWindow(nb->GetCurrentPage());
-			SetPage(nb->GetSelection());
-		}
-	}
-	else if (panelType == wxDOCKING_SPLITTER && dockingSource)
-	{
-		wxSplitterWindow *sp = p.GetSplitter();
-		SetTitle(sp->GetName());
-
-		wxOrientation orientation = (sp->GetSplitMode() == wxSPLIT_HORIZONTAL) ? wxHORIZONTAL : wxVERTICAL;
-		SetOrientation(orientation);
-	}
+	if (source.GetType() == wxDOCKING_NOTEBOOK)
+		FromNotebook(coordinates, source);
+	else if (source.GetType() == wxDOCKING_SPLITTER)
+		FromSplitter(coordinates, source, lastSelected);
+	else
+		SetWindow(window);
 
 	SetFrame(wxDockingUtils::DockingFrameFromWindow(source));
 	if (!GetFrame())

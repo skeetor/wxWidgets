@@ -270,28 +270,42 @@ namespace wxDockingUtils
 		if (!sw)
 			return false;
 
-		// If it is a notebook the target may be the same window as it could be a tab move
+		// If it is a notebook the target may be the same window as it could be a tab move.
+		// If the target is the same as the source, then we have to check if it is a notebook.
+		// In that case the user may want to move a tab to a new position.
+		// For a splitter, there is nothing we can do.
 		if (sw.GetType() == wxDOCKING_NOTEBOOK)
 		{
-			// If the target is the same as the source, then we have to check if it is a notebook.
-			// In that case the user may want to move a tab to a new position.
-			// For a splitter, there is nothing we can do.
-			if (src.GetWindow() == tgt.GetWindow())
-			{
-				size_t si = src.GetPage();
-				size_t ti = tgt.GetPage();
+			size_t si = src.GetPage();
+			wxNotebook *snb = sw.GetNotebook();
+			size_t ti = tgt.GetPage();
 
-				// Mouse is still in the same tab, so we ignore it.
-				if (ti != wxNOT_FOUND && si != wxNOT_FOUND)
+			// Moving the last tab into the tab area doesn't make sense, as it would stay
+			// in the same position.
+			if (tgt.IsTabArea() && !tgt.IsOnTab() && si == snb->GetPageCount()-1)
+				return false;
+
+			// Move the whole notebook into itself.
+			if (si == wxNOT_FOUND && IsParentOf(snb, tgt.GetWindow()))
+				return false;
+
+			if (tw.GetType() == wxDOCKING_NOTEBOOK)
+			{
+				if (src.GetWindow() == tgt.GetWindow())
 				{
+					// If it is the same notebook, we can only move into a different tab.
 					if (ti == si)
 						return false;
-
-					return true;
 				}
-				else
-					return false;
+
+				return true;
 			}
+
+			// Is the target window part of the current source page window?
+			if (IsParentOf(snb->GetPage(si), tgt.GetWindow()))
+				return false;
+
+			return true;
 		}
 		else if (tw.GetType() == wxDOCKING_SPLITTER)
 		{
@@ -351,31 +365,6 @@ namespace wxDockingUtils
 
 		memDC.Blit(0, 0, rect.width,rect.height, &dc, rect.x, rect.y);
 		memDC.SelectObject(wxNullBitmap);
-	}
-
-	wxDirection FindDirection(wxDockingInfo const &info, wxDockingEntity &window, wxPoint &mousePos)
-	{
-		if (info.IsTabArea())
-			return wxCENTRAL;
-
-		wxRect cr = window->GetClientRect();
-		window->ClientToScreen(&cr.x, &cr.y);
-
-		wxSize border = window->GetWindowBorderSize();
-		if (mousePos.y < (cr.y + (int)wxDOCKING_TRIGGER_HEIGHT))				// Cursor is near the top border
-			return wxUP;
-
-		if (mousePos.y > (cr.y + (cr.height - wxDOCKING_TRIGGER_HEIGHT)))		// Cursor is at the bottom border
-			return wxDOWN;
-
-		wxPoint clPos = window->ScreenToClient(mousePos);
-		if (clPos.x < wxDOCKING_TRIGGER_WIDTH)									// Cursor is at the left border
-			return wxLEFT;
-
-		if (clPos.x > (cr.width - wxDOCKING_TRIGGER_WIDTH))						// Cursor is at the right border
-			return wxRIGHT;
-
-		return wxALL;
 	}
 
 	bool Blend(wxBitmap &src, wxBitmap &target, float alpha)
@@ -467,7 +456,7 @@ namespace wxDockingUtils
 		return true;
 	}
 
-	void PaintRect(wxRect &rectangle, wxDockingEntity &panel, wxColor rgb)
+	void PaintRect(wxRect &rectangle, wxDockingEntity const &panel, wxColor rgb)
 	{
 		wxScreenDC dc;
 		wxBrush brush(rgb);
@@ -482,6 +471,123 @@ namespace wxDockingUtils
 		dc.SetBrush(*wxTRANSPARENT_BRUSH);
 		dc.SetPen(*wxBLACK_PEN);
 		dc.DrawRectangle(rect);
+	}
+
+	bool IsOnSash(wxSplitterWindow *splitter, wxPoint const &coordinates)
+	{
+		wxSplitMode md = splitter->GetSplitMode();
+		wxRect sashArea;
+
+		wxWindow *w = splitter->GetWindow1();
+		if (md == wxSPLIT_HORIZONTAL)
+		{
+			wxSize sz = splitter->GetSize();
+			sashArea.width = sz.GetWidth();
+
+			wxPoint pt1 = w->GetPosition();
+			wxPoint pt2 = splitter->GetWindow2()->GetPosition();
+			sashArea.height = pt2.y - pt1.y;
+
+			sz = w->GetSize();
+			sashArea.x = 0;
+			sashArea.y = sz.GetHeight();
+		}
+		else
+		{
+			wxSize sz = splitter->GetSize();
+			sashArea.height = sz.GetHeight();
+
+			wxPoint pt1 = w->GetPosition();
+			wxPoint pt2 = splitter->GetWindow2()->GetPosition();
+			sashArea.width = pt2.x - pt1.x;
+
+			sz = w->GetSize();
+			sashArea.y = 0;
+			sashArea.x = sz.GetWidth();
+		}
+
+		if (!sashArea.Contains(coordinates))
+			return false;
+
+		return true;
+	}
+
+	wxRect GetAlignedTabRect(wxNotebook *notebook, wxRect const &openRect, wxRect const &pageRect, size_t page)
+	{
+		wxRect tabRect = notebook->GetTabRect(page);
+
+		// If the coordinate is smaller than the height, it means there is no room for
+		// an additional tab and the tab is on the border, so we have to align it.
+		// The same applies for the other directions.
+		switch (notebook->GetTabOrientation())
+		{
+			case wxTOP:
+			{
+				if (tabRect.y < tabRect.height)
+					tabRect.y = 0;
+
+				if (tabRect.x < tabRect.width)
+					tabRect.x = 0;
+
+				int v = pageRect.y - (tabRect.x + tabRect.height);
+				if (v < tabRect.height)
+					tabRect.height += v;
+			}
+			break;
+
+			case wxBOTTOM:
+			{
+				if (tabRect.x < tabRect.width)
+					tabRect.x = 0;
+
+				int v = (pageRect.y + pageRect.height) - tabRect.y;
+				if (v < tabRect.height)
+				{
+					tabRect.y -= v;
+					tabRect.height += v;
+				}
+			}
+			break;
+
+			case wxLEFT:
+			{
+				if (tabRect.y < tabRect.height)
+					tabRect.y = 0;
+
+				if (tabRect.x < tabRect.width)
+					tabRect.x = 0;
+
+				int v = pageRect.x - (tabRect.x + tabRect.width);
+				if (v < tabRect.width)
+					tabRect.width += v;
+
+				v = openRect.y - (tabRect.y + tabRect.height);
+				if (v < tabRect.height)
+					tabRect.height += v;
+			}
+			break;
+
+			case wxRIGHT:
+			{
+				if (tabRect.y < tabRect.height)
+					tabRect.y = 0;
+
+				int v = tabRect.x - (pageRect.x + pageRect.width);
+				if (v < tabRect.width)
+				{
+					tabRect.x -= v;
+					tabRect.width += v;
+				}
+
+				wxRect notebookRect = notebook->GetRect();
+				v = (tabRect.x + tabRect.width) - (notebookRect.x - notebookRect.width);
+				if (v < tabRect.width)
+					tabRect.width += v;
+			}
+			break;
+		}
+
+		return tabRect;
 	}
 }
 
