@@ -301,8 +301,12 @@ namespace wxDockingUtils
 				return true;
 			}
 
+			wxWindow *w = snb;
+			if (si != wxNOT_FOUND)
+				w = snb->GetPage(si);
+
 			// Is the target window part of the current source page window?
-			if (IsParentOf(snb->GetPage(si), tgt.GetWindow()))
+			if (IsParentOf(w, tgt.GetWindow()))
 				return false;
 
 			return true;
