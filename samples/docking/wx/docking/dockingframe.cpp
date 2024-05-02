@@ -908,32 +908,6 @@ void wxDockingFrame::SendReleasePanel(wxDockingEntity const &window)
 	GetEventHandler()->QueueEvent(evt.Clone());
 }
 
-bool wxDockingFrame::RemovePanel(wxDockingEntity panel, wxDockingEntity const &window)
-{
-	if (!window || !panel)
-		return false;
-
-	bool success = false;
-	switch (panel.GetType())
-	{
-		case wxDOCKING_FRAME:
-			success = RemoveFromFrame(panel, window);
-		break;
-
-		case wxDOCKING_SPLITTER:
-			success = RemoveFromSplitter(panel, window);
-		break;
-
-		case wxDOCKING_NOTEBOOK:
-			success = RemoveFromNotebook(panel, window);
-		break;
-	}
-
-	wxDockingState::GetInstance().panels.remove(window);
-
-	return success;
-}
-
 bool wxDockingFrame::SendTryRemovePanel(wxDockingInfo const &info) const
 {
 	wxDockingEvent evt(wxEVT_DOCKING_TRY_REMOVE_PANEL);
@@ -953,48 +927,99 @@ void wxDockingFrame::OnMovePanel(wxDockingEvent &event)
 bool wxDockingFrame::MovePanel(wxDockingInfo const &src, wxDockingInfo const &tgt)
 {
 	wxDockingEntity sw = src.GetWindow();
-	wxCHECK_MSG(sw != nullptr, false, wxT("Source panel missing"));
+	wxCHECK_MSG(src.GetWindow() != nullptr, false, wxT("Source panel missing"));
 
-	//wxDockingEntity sp = wxDockingUtils::FindParentPanel(sw);
-	wxDockingEntity sp;
-
-	if (!sw)
-	{
-		if (sp.GetType() == wxDOCKING_NOTEBOOK)
-		{
-			size_t page = src.GetPage();
-			if (page != wxNOT_FOUND)
-			{
-				wxNotebook *nb = sp.GetNotebook();
-				sw = nb->GetPage(page);
-			}
-		}
-	}
-
-	if (!sw)
-	{
-		sw = sp;
-		sp = sw->GetParent();
-	}
-
+	// Preserve the title
 	wxString title = wxDockingState::GetInstance().PanelState(sw).GetTitle();
-	wxDockingFrame *frame = src.GetFrame();
-	wxCHECK_MSG(frame->RemovePanel(sp, sw), false, wxT("Failed to remove source panel!"));
+	sw = RemovePanel(src, false);
+	wxCHECK_MSG(sw != nullptr, false, wxT("Failed to remove source panel!"));
 
 	wxDockingInfo info;
-	frame = tgt.GetFrame();
-
 	info = tgt;
-	info.SetFrame(frame);
 	info.SetTitle(title);
 	info.SetActivate();
 
 	return AddPanel(info, sw);
 }
 
+wxDockingEntity wxDockingFrame::RemovePanel(wxDockingInfo const &src, bool unlinkPages)
+{
+	wxDockingEntity removed;
+
+	switch (src.GetWindow().GetType())
+	{
+		case wxDOCKING_FRAME:
+			RemoveFromFrame(wxDockingEntity(), wxDockingEntity());
+		break;
+
+		case wxDOCKING_SPLITTER:
+			RemoveFromSplitter(wxDockingEntity(), wxDockingEntity());
+		break;
+
+		case wxDOCKING_NOTEBOOK:
+			return RemoveNotebook(src, unlinkPages);
+	}
+
+	return wxDockingEntity();
+}
+
+wxDockingEntity wxDockingFrame::RemoveNotebook(wxDockingInfo const &src, bool unlinkPages)
+{
+	wxDockingEntity const &notebook = src.GetWindow();
+	wxNotebook *nb = notebook.GetNotebook();
+	if (!nb)
+		return false;
+
+	int pageIndex = nb->FindPage(page);
+	if (pageIndex == wxNOT_FOUND)
+		return false;
+
+	wxDockingState const &gs = wxDockingState::GetInstance();
+
+	nb->RemovePage(pageIndex);
+	page->Reparent(this);
+
+	if (nb->GetPageCount() <= 1)
+	{
+		// If the pagecount is == 1, then we try to convert the last page back to a normal window without
+		// a tab. In order to do this, we have to check if the tabctrl is persistent or not by asking
+		// the user. If the pagecount is already 0 we can remove the tabcontrol if the client allows it.
+		wxDockingInfo info;
+
+		info.SetWindow(notebook);
+		if (gs.IsLocked(notebook))
+		{
+			nb->Refresh();
+			return true;
+		}
+
+		if (!SendTryRemovePanel(info))
+		{
+			nb->Refresh();
+			return true;
+		}
+
+		if (notebook->GetPageCount() == 1)
+		{
+			wxDockingEntity pg = notebook->GetPage(0);
+			notebook->RemovePage(0);
+			pg->Reparent(this);
+			ReplaceWindow(notebookPanel, pg, gs.PanelState(pg).GetTitle());
+			SendReleasePanel(notebookPanel);
+		}
+		else
+			RemovePanel(notebook->GetParent(), notebook);
+	}
+	else
+		success = true;
+
+	return success;
+}
+
 bool wxDockingFrame::RemoveFromFrame(wxDockingEntity &frame, wxDockingEntity const &userWindow)
 {
 	wxDockingFrame *f = frame.GetFrame();
+	wxCHECK_MSG(f != this, false, wxT("Can not remove the frame from itself. It needs to be called from a different frame."));
 
 	wxDockingEntity root = f->GetRootPanel();
 	wxCHECK_MSG(root && userWindow != nullptr && userWindow == root, false, wxT("Invalid window for frame"));
@@ -1119,62 +1144,6 @@ bool wxDockingFrame::RemoveFromSplitter(wxDockingEntity const &splitterPanel, wx
 		SendReleasePanel(splitterPanel);
 
 	return true;
-}
-
-bool wxDockingFrame::RemoveFromNotebook(wxDockingEntity const &notebookPanel, wxDockingEntity const &page)
-{
-	wxNotebook *notebook = notebookPanel.GetNotebook();
-	if (!notebook)
-		return false;
-
-	int pageIndex = notebook->FindPage(page);
-	if (pageIndex == wxNOT_FOUND)
-		return false;
-
-	wxDockingState const &gs = wxDockingState::GetInstance();
-	bool success = false;
-
-	notebook->RemovePage(pageIndex);
-	page->Reparent(this);
-
-	if (notebook->GetPageCount() <= 1)
-	{
-		// If the pagecount is == 1, then we try to convert the last page back to a normal window without
-		// a tab. In order to do this, we have to check if the tabctrl is persistent or not by asking
-		// the user. If the pagecount is already 0 we can remove the tabcontrol if the client allows it.
-		wxDockingInfo info;
-
-		info.SetWindow(notebookPanel);
-
-		if (gs.IsLocked(notebookPanel))
-		{
-			notebookPanel->Refresh();
-			return true;
-		}
-
-		if (!SendTryRemovePanel(info))
-		{
-			notebookPanel->Refresh();
-			return true;
-		}
-
-		if (notebook->GetPageCount() == 1)
-		{
-			wxDockingEntity pg = notebook->GetPage(0);
-			notebook->RemovePage(0);
-			pg->Reparent(this);
-			ReplaceWindow(notebookPanel, pg, gs.PanelState(pg).GetTitle());
-			SendReleasePanel(notebookPanel);
-		}
-		else
-			RemovePanel(notebookPanel->GetParent(), notebookPanel);
-
-		success = true;
-	}
-	else
-		success = true;
-
-	return success;
 }
 
 bool wxDockingFrame::MoveToPanel(wxDockingEntity const &newPanel, wxDockingEntity const &panel, wxWindow *window)

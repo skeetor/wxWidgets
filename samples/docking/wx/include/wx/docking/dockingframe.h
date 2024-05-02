@@ -61,9 +61,13 @@ public: // API
 	 * somewhere else, then this is not needed, as the docking module will do this internally to
 	 * the correct target panel.
 	 *
-	 * RETURN: true if the specified window was removed.
+	 * If unlinkPanels is true, then the top level panel of a container will be removed from the
+	 * global state. i.E. If the container is a notebook, then all pages will be unlinked. Note
+	 * that this does not remove or delete the panel itself, only it's state.
+	 * 
+	 * RETURN: Returns the removed window, or nullptr if it failed.
 	 */
-	bool RemovePanel(wxDockingEntity parentPanel, wxDockingEntity const &userWindow);
+	wxDockingEntity RemovePanel(wxDockingInfo const &info, bool unlinkPanels);
 
 	/**
 	 * Moves a window, which already has to exist in the docking system, to
@@ -239,11 +243,14 @@ protected: // Helpers
 	bool DoMoveSplitter(wxDockingInfo const &src, wxDockingInfo const &tgt);
 
 	/**
-	 * Remove the page from a notebook. If the page is null the notebook itself is removed.
-	 * 
+	 * Remove the notebook or a page from it as specified in wxDockingInfo. If the
+	 * notebook itself is removed and unlinkPanels is true then all pages will be removed
+	 * from the global state list. This will not remove or delete the pages itself, only
+	 * its state.
+	 * The removed panel is returned. At this stage, the panel is not destroyed and the caller
+	 * is responsible for the lifetime of it. The returned window can be safely destroyed.
 	 */
-	bool RemoveFromNotebook(wxDockingEntity const &notebook, wxDockingEntity const &page = wxDockingEntity());
-
+	wxDockingEntity RemoveNotebook(wxDockingInfo const &src, bool unlinkPanels);
 	bool RemoveFromSplitter(wxDockingEntity const &splitter, wxDockingEntity const &userWindow);
 	bool RemoveFromFrame(wxDockingEntity &frame, wxDockingEntity const &userWindow);
 
