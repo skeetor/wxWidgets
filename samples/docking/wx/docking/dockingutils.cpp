@@ -7,6 +7,7 @@
 #include <wx/docking/dockingframe.h>
 #include <wx/docking/dockingutils.h>
 #include <wx/docking/dockinginfo.h>
+#include <wx/docking/dockingstate.h>
 #include <wx/dcmemory.h>
 #include <wx/rawbmp.h>
 #include <wx/vector.h>
@@ -63,9 +64,17 @@ namespace wxDockingUtils
 
 		wxDockingEntity w = window;
 		wxWindow *child = nullptr;
+		wxDockingState const &ds = wxDockingState::GetInstance();
 
 		while (w)
 		{
+			if (!ds.IsKnownPanel(w))
+			{
+				child = w;
+				w = window->GetParent();
+				continue;
+			}
+
 			wxDockingEntityType pt = w.GetType();
 			if (pt == wxDOCKING_SPLITTER || pt == wxDOCKING_NOTEBOOK || pt == wxDOCKING_FRAME)
 			{

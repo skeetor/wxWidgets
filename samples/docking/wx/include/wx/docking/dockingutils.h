@@ -29,7 +29,7 @@ namespace wxDockingUtils
 	WXDLLIMPEXP_DOCKING wxDockingFrame *DockingFrameFromWindow(wxWindow *window);
 
 	/**
-	 * Find the parent we can dock to,which is either a splitter, notebook or a frame.
+	 * Find the parent we can dock to, which is either a splitter, notebook or a frame.
 	 * If the provided window is already dockable, this is returned and child might be null.
 	 * 
 	 * dockingChild returns the child window which is directly connected to the dockingpanel.

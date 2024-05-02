@@ -953,9 +953,11 @@ void wxDockingFrame::OnMovePanel(wxDockingEvent &event)
 bool wxDockingFrame::MovePanel(wxDockingInfo const &src, wxDockingInfo const &tgt)
 {
 	wxDockingEntity sw = src.GetWindow();
-	wxDockingEntity sp = wxDockingUtils::FindParentPanel(sw);
+	wxCHECK_MSG(sw != nullptr, false, wxT("Source panel missing"));
 
-	wxCHECK_MSG(sp != nullptr, false, wxT("Source panels missing"));
+	//wxDockingEntity sp = wxDockingUtils::FindParentPanel(sw);
+	wxDockingEntity sp;
+
 	if (!sw)
 	{
 		if (sp.GetType() == wxDOCKING_NOTEBOOK)
