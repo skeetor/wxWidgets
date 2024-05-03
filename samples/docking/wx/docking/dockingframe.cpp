@@ -932,7 +932,8 @@ bool wxDockingFrame::MovePanel(wxDockingInfo const &src, wxDockingInfo const &tg
 	// Preserve the title
 	wxString title = wxDockingState::GetInstance().PanelState(sw).GetTitle();
 	sw = RemovePanel(src, false);
-	wxCHECK_MSG(sw != nullptr, false, wxT("Failed to remove source panel!"));
+	if (!sw)
+		return false;
 
 	wxDockingInfo info;
 	info = tgt;
@@ -942,11 +943,19 @@ bool wxDockingFrame::MovePanel(wxDockingInfo const &src, wxDockingInfo const &tg
 	return AddPanel(info, sw);
 }
 
-wxDockingEntity wxDockingFrame::RemovePanel(wxDockingInfo const &src, bool unlinkPages)
+wxDockingEntity wxDockingFrame::RemovePanel(wxDockingInfo const &info, bool unlinkPages)
 {
-	wxDockingEntity removed;
+	wxDockingInfo src = info;
+	wxDockingEntityType type = src.GetWindow().GetType();
 
-	switch (src.GetWindow().GetType())
+	wxCHECK_MSG(type != wxDOCKING_NONE, wxDockingEntity(), wxT("Paneltype must be defined."));
+
+	// If the panel is a user window, we have to find the parent to remove it from.
+	if (type == wxDOCKING_WINDOW)
+	{
+	}
+
+	switch (type)
 	{
 		case wxDOCKING_FRAME:
 			RemoveFromFrame(wxDockingEntity(), wxDockingEntity());
@@ -958,6 +967,9 @@ wxDockingEntity wxDockingFrame::RemovePanel(wxDockingInfo const &src, bool unlin
 
 		case wxDOCKING_NOTEBOOK:
 			return RemoveNotebook(src, unlinkPages);
+
+		default:
+			wxCHECK_MSG(false, wxDockingEntity(), wxT("Unknown paneltype"));
 	}
 
 	return wxDockingEntity();
@@ -968,11 +980,12 @@ wxDockingEntity wxDockingFrame::RemoveNotebook(wxDockingInfo const &src, bool un
 	wxDockingEntity const &notebook = src.GetWindow();
 	wxNotebook *nb = notebook.GetNotebook();
 	if (!nb)
-		return false;
+		return wxDockingEntity();
 
+	wxWindow *page = nullptr;
 	int pageIndex = nb->FindPage(page);
 	if (pageIndex == wxNOT_FOUND)
-		return false;
+		return wxDockingEntity();
 
 	wxDockingState const &gs = wxDockingState::GetInstance();
 
@@ -990,30 +1003,28 @@ wxDockingEntity wxDockingFrame::RemoveNotebook(wxDockingInfo const &src, bool un
 		if (gs.IsLocked(notebook))
 		{
 			nb->Refresh();
-			return true;
+			return wxDockingEntity();
 		}
 
 		if (!SendTryRemovePanel(info))
 		{
 			nb->Refresh();
-			return true;
+			return wxDockingEntity();
 		}
 
-		if (notebook->GetPageCount() == 1)
+		if (nb->GetPageCount() == 1)
 		{
-			wxDockingEntity pg = notebook->GetPage(0);
-			notebook->RemovePage(0);
+			wxDockingEntity pg = nb->GetPage(0);
+			nb->RemovePage(0);
 			pg->Reparent(this);
-			ReplaceWindow(notebookPanel, pg, gs.PanelState(pg).GetTitle());
-			SendReleasePanel(notebookPanel);
+			ReplaceWindow(notebook, pg, gs.PanelState(pg).GetTitle());
+			SendReleasePanel(notebook);
 		}
-		else
-			RemovePanel(notebook->GetParent(), notebook);
+		//else
+		//	RemovePanel(nb->GetParent(), notebook);
 	}
-	else
-		success = true;
 
-	return success;
+	return wxDockingEntity();
 }
 
 bool wxDockingFrame::RemoveFromFrame(wxDockingEntity &frame, wxDockingEntity const &userWindow)
