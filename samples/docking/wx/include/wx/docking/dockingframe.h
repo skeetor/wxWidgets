@@ -61,13 +61,9 @@ public: // API
 	 * somewhere else, then this is not needed, as the docking module will do this internally to
 	 * the correct target panel.
 	 *
-	 * If unlinkPanels is true, then the top level panel of a container will be removed from the
-	 * global state. i.E. If the container is a notebook, then all pages will be unlinked. Note
-	 * that this does not remove or delete the panel itself, only it's state.
-	 * 
 	 * RETURN: Returns the removed window, or nullptr if it failed.
 	 */
-	wxDockingEntity RemovePanel(wxDockingInfo const &info, bool unlinkPanels);
+	bool RemovePanel(wxDockingInfo const &info);
 
 	/**
 	 * Moves a window, which already has to exist in the docking system, to
@@ -243,16 +239,18 @@ protected: // Helpers
 	bool DoMoveSplitter(wxDockingInfo const &src, wxDockingInfo const &tgt);
 
 	/**
-	 * Remove the notebook or a page from it as specified in wxDockingInfo. If the
-	 * notebook itself is removed and unlinkPanels is true then all pages will be removed
-	 * from the global state list. This will not remove or delete the pages itself, only
-	 * its state.
+	 * Remove the notebook or a page from it, as specified in wxDockingInfo.
+	 * If the last page of a notebook is removed it might be destroyed. If the notebook is
+	 * locked, it will stay, otherwise an event is sent where the client can decide to keep
+	 * or destroy it.
+	 * If allowDestroy is false, then this check will not be performed and no event is sent as
+	 * the notebook will stay, thus overriding those checks.
 	 * The removed panel is returned. At this stage, the panel is not destroyed and the caller
 	 * is responsible for the lifetime of it. The returned window can be safely destroyed.
 	 */
-	wxDockingEntity RemoveNotebook(wxDockingInfo const &src, bool unlinkPanels);
-	bool RemoveFromSplitter(wxDockingEntity const &splitter, wxDockingEntity const &userWindow);
-	bool RemoveFromFrame(wxDockingEntity &frame, wxDockingEntity const &userWindow);
+	wxDockingEntityState RemoveNotebook(wxDockingInfo const &src, bool allowDestroy);
+	wxDockingEntityState RemoveSplitter(wxDockingInfo const &src, bool allowDestroy);
+	wxDockingEntityState RemoveFrame(wxDockingInfo const &src, bool allowDestroy);
 
 	/**
 	 * Remove the window from the panel and reattaches it to the otherPanel. The source panel may be destroyed

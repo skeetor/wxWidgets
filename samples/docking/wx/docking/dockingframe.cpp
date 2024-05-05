@@ -924,125 +924,198 @@ void wxDockingFrame::OnMovePanel(wxDockingEvent &event)
 		MovePanel(event.GetSource(), event.GetTarget());
 }
 
-bool wxDockingFrame::MovePanel(wxDockingInfo const &src, wxDockingInfo const &tgt)
+bool wxDockingFrame::MovePanel(wxDockingInfo const &srcInfo, wxDockingInfo const &tgt)
 {
-	wxDockingEntity sw = src.GetWindow();
-	wxCHECK_MSG(src.GetWindow() != nullptr, false, wxT("Source panel missing"));
+	wxCHECK_MSG(srcInfo.GetWindow() != nullptr, false, wxT("Source panel missing"));
 
-	// Preserve the title
-	wxString title = wxDockingState::GetInstance().PanelState(sw).GetTitle();
-	sw = RemovePanel(src, false);
-	if (!sw)
-		return false;
-
-	wxDockingInfo info;
-	info = tgt;
-	info.SetTitle(title);
-	info.SetActivate();
-
-	return AddPanel(info, sw);
-}
-
-wxDockingEntity wxDockingFrame::RemovePanel(wxDockingInfo const &info, bool unlinkPages)
-{
-	wxDockingInfo src = info;
+	wxDockingInfo src = srcInfo;
+	wxDockingEntityState removed;
 	wxDockingEntityType type = src.GetWindow().GetType();
 
-	wxCHECK_MSG(type != wxDOCKING_NONE, wxDockingEntity(), wxT("Paneltype must be defined."));
-
-	// If the panel is a user window, we have to find the parent to remove it from.
 	if (type == wxDOCKING_WINDOW)
 	{
+		src.UpdateToParent();
+		type = src.GetWindow().GetType();
 	}
 
 	switch (type)
 	{
 		case wxDOCKING_FRAME:
-			RemoveFromFrame(wxDockingEntity(), wxDockingEntity());
+			removed = RemoveFrame(src, true);
 		break;
 
 		case wxDOCKING_SPLITTER:
-			RemoveFromSplitter(wxDockingEntity(), wxDockingEntity());
+			removed = RemoveSplitter(src, true);
 		break;
 
 		case wxDOCKING_NOTEBOOK:
-			return RemoveNotebook(src, unlinkPages);
+		{
+			bool allowDestroy = src.GetDockingEntity() != tgt.GetDockingEntity();
+			removed = RemoveNotebook(src, allowDestroy);
+		}
+		break;
 
 		default:
-			wxCHECK_MSG(false, wxDockingEntity(), wxT("Unknown paneltype"));
+			wxCHECK_MSG(false, false, wxT("Unsupported paneltype"));
 	}
 
-	return wxDockingEntity();
+	if (!removed)
+		return false;
+
+	// Preserve the title
+	wxDockingInfo info;
+	info = tgt;
+	info.SetTitle(removed.GetTitle());
+	info.SetActivate();
+
+	return AddPanel(info, removed);
 }
 
-wxDockingEntity wxDockingFrame::RemoveNotebook(wxDockingInfo const &src, bool unlinkPages)
+bool wxDockingFrame::RemovePanel(wxDockingInfo const &srcInfo)
+{
+	wxDockingInfo src = srcInfo;
+	wxDockingEntityType type = src.GetWindow().GetType();
+
+	if (type == wxDOCKING_WINDOW)
+		src.UpdateToParent();
+
+	wxDockingEntityState removed;
+	switch (type)
+	{
+		case wxDOCKING_FRAME:
+			removed = RemoveFrame(src, true);
+		break;
+
+		case wxDOCKING_SPLITTER:
+			removed = RemoveSplitter(src, true);
+		break;
+
+		case wxDOCKING_NOTEBOOK:
+			removed = RemoveNotebook(src, true);
+		break;
+
+		default:
+			wxCHECK_MSG(false, false, wxT("Unknown paneltype"));
+	}
+
+	wxDockingState::GetInstance().panels.remove(removed);
+
+	return removed;
+}
+
+wxDockingEntityState wxDockingFrame::RemoveNotebook(wxDockingInfo const &src, bool allowDestroy)
 {
 	wxDockingEntity const &notebook = src.GetWindow();
 	wxNotebook *nb = notebook.GetNotebook();
 	if (!nb)
-		return wxDockingEntity();
+		return wxDockingEntityState();
 
 	wxWindow *page = nullptr;
-	int pageIndex = nb->FindPage(page);
-	if (pageIndex == wxNOT_FOUND)
-		return wxDockingEntity();
+	size_t pageIndex = src.GetPage();
+	if (pageIndex != wxNOT_FOUND)
+		page = nb->GetPage(pageIndex);
 
-	wxDockingState const &gs = wxDockingState::GetInstance();
+	wxDockingState &gs = wxDockingState::GetInstance();
+	wxDockingEntityState const &panelState = gs.PanelState(page);
 
 	nb->RemovePage(pageIndex);
 	page->Reparent(this);
 
-	if (nb->GetPageCount() <= 1)
+	if (allowDestroy && !nb->GetPageCount())
 	{
-		// If the pagecount is == 1, then we try to convert the last page back to a normal window without
-		// a tab. In order to do this, we have to check if the tabctrl is persistent or not by asking
-		// the user. If the pagecount is already 0 we can remove the tabcontrol if the client allows it.
-		wxDockingInfo info;
-
-		info.SetWindow(notebook);
+		// If the noteook become empty, we check if we can discard it. If the notebook is locked,
+		// or if the client vetoes it, we are done.
 		if (gs.IsLocked(notebook))
 		{
 			nb->Refresh();
-			return wxDockingEntity();
+			return panelState;
 		}
 
+		wxDockingInfo info;
+		info.SetWindow(notebook);
 		if (!SendTryRemovePanel(info))
 		{
 			nb->Refresh();
-			return wxDockingEntity();
+			return panelState;
 		}
 
-		if (nb->GetPageCount() == 1)
-		{
-			wxDockingEntity pg = nb->GetPage(0);
-			nb->RemovePage(0);
-			pg->Reparent(this);
-			ReplaceWindow(notebook, pg, gs.PanelState(pg).GetTitle());
-			SendReleasePanel(notebook);
-		}
-		//else
-		//	RemovePanel(nb->GetParent(), notebook);
+		SendReleasePanel(notebook);
+		return panelState;
 	}
 
-	return wxDockingEntity();
+	nb->Refresh();
+	return panelState;
 }
 
-bool wxDockingFrame::RemoveFromFrame(wxDockingEntity &frame, wxDockingEntity const &userWindow)
+wxDockingEntityState wxDockingFrame::RemoveFrame(wxDockingInfo const &src, bool allowDestroy)
 {
-	wxDockingFrame *f = frame.GetFrame();
-	wxCHECK_MSG(f != this, false, wxT("Can not remove the frame from itself. It needs to be called from a different frame."));
+	return wxDockingEntityState();
 
-	wxDockingEntity root = f->GetRootPanel();
-	wxCHECK_MSG(root && userWindow != nullptr && userWindow == root, false, wxT("Invalid window for frame"));
+	//wxDockingFrame *f = frame.GetFrame();
+	//wxCHECK_MSG(f != this, false, wxT("Can not remove the frame from itself. It needs to be called from a different frame."));
 
-	f->SetRootPanel(nullptr);
+	//wxDockingEntity root = f->GetRootPanel();
+	//wxCHECK_MSG(root && userWindow != nullptr && userWindow == root, false, wxT("Invalid window for frame"));
+
+	//f->SetRootPanel(nullptr);
+
+	//wxDockingInfo info;
+	//info.SetWindow(frame);
+
+	//// Check if the frame can be removed.
+	//if (SendTryRemovePanel(info))
+	//	SendReleasePanel(frame);
+
+	//return true;
+}
+
+wxDockingEntityState wxDockingFrame::RemoveSplitter(wxDockingInfo const &src, bool allowDestroy)
+{
+	wxDockingEntityState removed;
+
+	wxSplitterWindow *splitter = splitterPanel.GetSplitter();
+	if (!splitter)
+		wxCHECK_MSG(false, removed, wxT("Panel is not a splitter"));
+
+	wxDockingState const &gs = wxDockingState::GetInstance();
+	wxDockingEntity otherWindow = splitter->GetWindow1();
+	if (otherWindow == window)
+		otherWindow = splitter->GetWindow2();
 
 	wxDockingInfo info;
-	info.SetWindow(frame);
+	info.SetWindow(splitterPanel);
 
-	// Check if the frame can be removed.
-	if (SendTryRemovePanel(info))
-		SendReleasePanel(frame);
+	wxDockingEntity panel = splitterPanel;
+
+	bool release = false;
+	if (!gs.IsLocked(splitterPanel) && SendTryRemovePanel(info))
+	{
+		// Detach from splitter so the user window wont get deleted when the splitter gets deleted.
+		// The caller is responsible for discarding the window if appropriate.
+		splitter->Unsplit(window);
+		release = true;
+	}
+	else
+	{
+		// If the splitter should be kept, we need a placeholder to keep the splitter intact.
+		wxDockingInfo inf;
+
+		inf.SetWindow(splitterPanel);
+		SendCreatePanel(inf, wxDOCKING_PLACEHOLDER);
+
+		// Now replace the current window with the placeholder.
+		otherWindow = inf.GetWindow();
+		panel = window;
+	}
+
+	if (!ReplaceWindow(panel, otherWindow, gs.PanelState(otherWindow).GetTitle()))
+	{
+		wxCHECK_MSG(false, nullptr, wxT("Failed to replace window"));
+		return false;
+	}
+
+	if (release)
+		SendReleasePanel(splitterPanel);
 
 	return true;
 }
@@ -1102,57 +1175,6 @@ bool wxDockingFrame::ReplaceWindow(wxDockingEntity const &oldWindow, wxDockingEn
 			//return false;
 		}
 	}
-
-	return true;
-}
-
-bool wxDockingFrame::RemoveFromSplitter(wxDockingEntity const &splitterPanel, wxDockingEntity const &window)
-{
-	wxSplitterWindow *splitter = splitterPanel.GetSplitter();
-	if (!splitter)
-	{
-		wxCHECK_MSG(false, false, wxT("Panel is not a splitter"));
-	}
-
-	wxDockingState const &gs = wxDockingState::GetInstance();
-	wxDockingEntity otherWindow = splitter->GetWindow1();
-	if (otherWindow == window)
-		otherWindow = splitter->GetWindow2();
-
-	wxDockingInfo info;
-	info.SetWindow(splitterPanel);
-
-	wxDockingEntity panel = splitterPanel;
-
-	bool release = false;
-	if (!gs.IsLocked(splitterPanel) && SendTryRemovePanel(info))
-	{
-		// Detach from splitter so the user window wont get deleted when the splitter gets deleted.
-		// The caller is responsible for discarding the window if appropriate.
-		splitter->Unsplit(window);
-		release = true;
-	}
-	else
-	{
-		// If the splitter should be kept, we need a placeholder to keep the splitter intact.
-		wxDockingInfo inf;
-
-		inf.SetWindow(splitterPanel);
-		SendCreatePanel(inf, wxDOCKING_PLACEHOLDER);
-
-		// Now replace the current window with the placeholder.
-		otherWindow = inf.GetWindow();
-		panel = window;
-	}
-
-	if (!ReplaceWindow(panel, otherWindow, gs.PanelState(otherWindow).GetTitle()))
-	{
-		wxCHECK_MSG(false, nullptr, wxT("Failed to replace window"));
-		return false;
-	}
-
-	if (release)
-		SendReleasePanel(splitterPanel);
 
 	return true;
 }

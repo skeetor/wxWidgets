@@ -107,6 +107,11 @@ public:
 	wxWindow *GetWindowAtPoint() const { return m_windowAtPoint; }
 	void SetWindowAtPoint(wxWindow *window) { m_windowAtPoint = window; }
 
+	/**
+	 * Update the wxDockingInfo to the parent of the currently selected panel.
+	 */
+	void UpdateToParent();
+
 protected:
 	void FromNotebook(wxPoint screenCoordinates, wxDockingEntity &notebook);
 	void FromSplitter(wxPoint screenCoordinates, wxDockingEntity &splitter, wxDockingEntity &lastSelected);

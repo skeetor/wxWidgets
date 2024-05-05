@@ -216,4 +216,40 @@ bool wxDockingInfo::FromWindow(wxPoint coordinates, wxDockingFrame *frame, wxWin
 	return true;
 }
 
+void wxDockingInfo::UpdateToParent()
+{
+	// If the panel is a user window, we have to find the parent to remove it from.
+	wxDockingEntity panel = GetWindow();
+	wxDockingEntity parent = panel.GetRawWindow()->GetParent();
+
+	switch (parent.GetType())
+	{
+		//case wxDOCKING_FRAME:
+		//	SetWindow(parent);
+		//break;
+
+		case wxDOCKING_SPLITTER:
+			SetWindow(parent);
+		break;
+
+		case wxDOCKING_NOTEBOOK:
+		{
+			wxNotebook *nb = parent.GetNotebook();
+			wxWindow *w = panel.GetRawWindow();
+			size_t page = nb->FindPage(w);
+			// The window is parented to the notebook, but not a page???
+			wxCHECK_MSG(page != wxNOT_FOUND, (void)0, wxT("Panel not found as a page"));
+
+			SetPage(page);
+			SetOnTab(false);
+			SetTabArea(false);
+			SetWindow(parent);
+		}
+		break;
+
+		default:
+			wxCHECK_MSG(false, (void)0, wxT("Unknown parent paneltype"));
+	}
+}
+
 #endif // wxUSE_DOCKING

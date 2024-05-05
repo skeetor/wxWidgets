@@ -269,15 +269,26 @@ namespace wxDockingUtils
 		return std::sqrt(((double)coordinate.x - cx) * ((double)coordinate.x - cx) + ((double)coordinate.y - cy) * ((double)coordinate.y - cy));
 	}
 
-	bool ValidateTarget(wxDockingInfo &src, wxDockingInfo &tgt)
+	bool ValidateTarget(wxDockingInfo &srcInfo, wxDockingInfo &tgt)
 	{
 		wxDockingEntity tw = tgt.GetDockingEntity();
 		if (!tw)
 			return false;
 
+		wxDockingInfo src = srcInfo;
 		wxDockingEntity sw = src.GetDockingEntity();
 		if (!sw)
 			return false;
+
+		if (sw.GetType() == wxDOCKING_WINDOW)
+		{
+			wxDockingEntity parent = sw.GetRawWindow()->GetParent();
+			if (parent.GetType() == wxDOCKING_NOTEBOOK)
+			{
+				src.UpdateToParent();
+				sw = src.GetDockingEntity();
+			}
+		}
 
 		// If it is a notebook the target may be the same window as it could be a tab move.
 		// If the target is the same as the source, then we have to check if it is a notebook.
