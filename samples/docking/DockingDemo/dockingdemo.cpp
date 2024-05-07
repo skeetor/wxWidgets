@@ -1172,9 +1172,8 @@ void MyFrame::OnRemoveDockingPanel(wxCommandEvent &WXUNUSED(evt))
 	wxSizeReportCtrl *w = m_activePanel;
 
 	// If the panel was successfully removed we can delete our window.
-	//if(RemovePanel(w->GetParent(), w))
-	//	delete w;
-	wxCHECK_MSG(false, (void)0, wxT("Not implemented"));
+	if(RemovePanel(wxDockingEntity(w)))
+		delete w;
 
 	m_activePanel = nullptr;
 }

@@ -60,10 +60,12 @@ public: // API
 	 * is to be reused, it might need to be reparented appropriatly. If it is to be docked again
 	 * somewhere else, then this is not needed, as the docking module will do this internally to
 	 * the correct target panel.
+	 * If allowParentDestroy is false, then the parent container will not be destroyed if it is
+	 * elligible for it. If the parent is locked, it will not be destroyed anyway.
 	 *
-	 * RETURN: Returns the removed window, or nullptr if it failed.
+	 * RETURN: true if sucessful.
 	 */
-	bool RemovePanel(wxDockingInfo const &info);
+	bool RemovePanel(wxDockingEntity &panel, bool allowParentDestroy = true);
 
 	/**
 	 * Moves a window, which already has to exist in the docking system, to
@@ -248,9 +250,9 @@ protected: // Helpers
 	 * The removed panel is returned. At this stage, the panel is not destroyed and the caller
 	 * is responsible for the lifetime of it. The returned window can be safely destroyed.
 	 */
-	wxDockingEntityState RemoveNotebook(wxDockingInfo const &src, bool allowDestroy);
-	wxDockingEntityState RemoveSplitter(wxDockingInfo const &src, bool allowDestroy);
-	wxDockingEntityState RemoveFrame(wxDockingInfo const &src, bool allowDestroy);
+	bool RemoveNotebook(wxDockingEntity &notebook, wxDockingEntity &page, bool allowDestroy);
+	bool RemoveSplitter(wxDockingEntity &splitter, wxDockingEntity &panel, bool allowDestroy);
+	bool RemoveFrame(wxDockingEntity &frame, wxDockingEntity &panel, bool allowDestroy);
 
 	/**
 	 * Remove the window from the panel and reattaches it to the otherPanel. The source panel may be destroyed
