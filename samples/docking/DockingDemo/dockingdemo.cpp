@@ -1187,31 +1187,32 @@ void MyFrame::createInitialLayout()
 		//.SetTabDirection(wxRIGHT)
 	;
 
-	wxDockingEntity rootTab = AddPanel(wxDockingInfo("Size Report 1.1")
-		//.SetForcePanel(true)				// The first panel should already appear in a splitter or notebook (this is default)
+	wxDockingEntity root = AddPanel(wxDockingInfo("Size Report 1.1")
+		.SetWindow(this)
 		.SetDirection(wxCENTRAL)
-		//.SetDirection(wxRIGHT)
-		//.SetSize(150, -1)
+		//.SetDirection(wxLEFT)
+		.SetSize(200, -1)
 		, createSizeReportCtrl("Ctrl1.1")
 	);
 
 	wxDockingState &gs = wxDockingState::GetInstance();
-	gs.SetLock(rootTab);
-	rootTab = AddPanel(wxDockingInfo("Size Report 1.2")
-		.SetWindow(rootTab)
+	gs.SetLock(root);
+	root = AddPanel(wxDockingInfo("Size Report 1.2")
+		.SetWindow(root)
 		, createSizeReportCtrl("Ctrl1.2")
 	);
-	rootTab = AddPanel(wxDockingInfo("Size Report 1.3")
-		.SetWindow(rootTab)
+	root = AddPanel(wxDockingInfo("Size Report 1.3")
+		.SetWindow(root)
 		, createSizeReportCtrl("Ctrl1.3")
 	);
-	rootTab = AddPanel(wxDockingInfo("Size Report 1.4")
-		.SetWindow(rootTab)
+	root = AddPanel(wxDockingInfo("Size Report 1.4")
+		.SetWindow(root)
 		, createSizeReportCtrl("Ctrl1.4")
 	);
 
 	wxDockingEntity l = AddPanel(wxDockingInfo("Size Report 2.0")
-		.SetWindow(rootTab)
+		.SetWindow(root)
+		.Placeholder(true)			// Force the panel inside the existing (empty) panel, instead of next to it.
 		.SetDirection(wxRIGHT)
 		.SetSize(150, -1)
 		, createSizeReportCtrl("Ctrl2.0")
@@ -1230,7 +1231,7 @@ void MyFrame::createInitialLayout()
 		, createSizeReportCtrl("Ctrl4.0")
 	);
 	AddPanel(wxDockingInfo("Size Report 5.0")
-		.SetWindow(rootTab)
+		.SetWindow(root)
 		.SetDirection(wxDOWN)
 		.SetSize(-1, 100)
 		, createSizeReportCtrl("Ctrl5.0")

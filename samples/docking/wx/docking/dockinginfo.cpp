@@ -22,7 +22,7 @@ wxDockingInfo::wxDockingInfo(wxString const &title)
 , m_page((size_t)-1)
 , m_activate(false)
 , m_floating(false)
-, m_forcePanel(true)
+, m_placeholder(false)
 , m_tabArea(false)
 , m_onTab(false)
 {
@@ -55,7 +55,7 @@ void wxDockingInfo::Clear()
 		m_size = wxSize(-1, -1);
 		m_activate = false;
 		m_floating = false;
-		m_forcePanel = true;
+		m_placeholder = false;
 		m_tabArea = false;
 		m_onTab = false;
 		m_tabDirection = wxTOP;

@@ -492,9 +492,6 @@ wxDockingEntity wxDockingFrame::AddSplitPanel(wxDockingInfo const &info, wxDocki
 	wxDockingEntity dockingTarget = info.GetWindow();
 
 	if (dockingTarget == nullptr)
-		dockingTarget = info.GetWindow();
-
-	if (dockingTarget == nullptr)
 		dockingTarget.Set(this, wxDOCKING_FRAME);
 
 	if (dockingTarget.GetType() == wxDOCKING_FRAME)
@@ -506,6 +503,7 @@ wxDockingEntity wxDockingFrame::AddSplitPanel(wxDockingInfo const &info, wxDocki
 
 	wxDockingEntity firstWindow;
 	wxDockingEntity secondWindow;
+	wxDockingEntity splitWindow;
 
 	if (direction == wxLEFT || direction == wxUP)
 	{
@@ -519,7 +517,7 @@ wxDockingEntity wxDockingFrame::AddSplitPanel(wxDockingInfo const &info, wxDocki
 	}
 	else
 	{
-		if (info.GetWindow().GetType() == wxDOCKING_PLACEHOLDER)
+		if (dockingTarget.GetType() == wxDOCKING_PLACEHOLDER)
 		{
 			ReplaceWindow(dockingTarget, userWindow, info.GetTitle(), parent);
 			SendReleasePanel(info.GetWindow());
@@ -527,10 +525,6 @@ wxDockingEntity wxDockingFrame::AddSplitPanel(wxDockingInfo const &info, wxDocki
 			inf.SetWindow(nullptr);
 
 			return info.GetPanel();
-		}
-		else
-		{
-			wxCHECK_MSG(false, p, wxT("Invalid direction for splitter"));
 		}
 	}
 
@@ -656,24 +650,18 @@ wxDockingEntity wxDockingFrame::AddFramePanel(wxDockingInfo const &info, wxDocki
 
 	if (root == nullptr)
 	{
-		// If the user set force_split but not force_panel then it is treated as if it were set.
-		createPanel = info.IsForcePanel();
-		if (!createPanel)
+		createPanel = true;
+		switch (info.GetDirection())
 		{
-			switch (info.GetDirection())
-			{
-				case wxLEFT:
-				case wxUP:
-					createPanel = true;
-					first = userWindow;
-				break;
+			case wxLEFT:
+			case wxUP:
+				first = userWindow;
+			break;
 
-				case wxRIGHT:
-				case wxDOWN:
-					createPanel = true;
-					second = userWindow;
-				break;
-			}
+			case wxRIGHT:
+			case wxDOWN:
+				second = userWindow;
+			break;
 		}
 	}
 	else
@@ -742,7 +730,6 @@ wxDockingEntity wxDockingFrame::AddFloatPanel(wxDockingInfo const &info, wxDocki
 	inf.Clear();
 	inf.SetTitle(wxDockingState::GetInstance().PanelState(userWindow).GetTitle());
 	inf.SetWindow(nullptr);
-	inf.SetForcePanel(true);
 
 	wxRect r = info.GetRect();
 	frame->SetSize(r);

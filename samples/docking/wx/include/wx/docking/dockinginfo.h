@@ -78,13 +78,8 @@ public:
 	bool isFloating() const { return m_floating; }
 	void SetFloating(bool floating = true) { m_floating = floating; }
 
-	/**
-	 * ForcePanel will create a tab or a splitter in thos cases where it is not strictly needed. For example, if the frame is empty
-	 * on startup and you add the first user window to it, it will simply be put into the frame by default. If you set the forcePanel
-	 * flag, then it will still create a tab as well for it (or a splitter, depending on the direction setting like CENTER or LEFT/RIGHT etc,).
-	 */
-	bool IsForcePanel() const { return m_forcePanel; }
-	wxDockingInfo &SetForcePanel(bool force) { m_forcePanel = force; return *this; }
+	bool Placeholder() const { return m_placeholder; }
+	wxDockingInfo &Placeholder(bool force) { m_placeholder = force; return *this; }
 
     size_t GetPage() const { return m_page; }
 	void SetPage(size_t page) { m_page = page; }
@@ -132,7 +127,7 @@ private:
 
 	bool m_activate:1;
 	bool m_floating:1;
-	bool m_forcePanel : 1;			// Create an appropritate panel even for the initial window. Default is none.
+	bool m_placeholder:1;			// Replace the placeholder instead of splitting
 	bool m_tabArea : 1;				// Is set to true if the mouse is within the tab area.
 									// This does not neccessarily mean that the mouse is over a tab. It can also be in the fre area when there are not enough tabs.
 	bool m_onTab : 1;				// Is set to true if the mouse is over a tab.
