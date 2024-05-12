@@ -78,7 +78,7 @@ public: // API
 	 * Replace the old window with the new one. The old window can be reused or deleted after that. If the parent
 	 * is a wxNotebook the title will be used for the tab. In case of a frame it will set the frame title.
 	 */
-	bool ReplaceWindow(wxDockingEntity const &oldWindow, wxDockingEntity const &newWindow, wxString const &title, wxDockingEntity parent = nullptr);
+	bool ReplaceWindow(wxDockingEntity const &oldWindow, wxDockingEntity const &newWindow, wxString const &title, wxDockingEntity parent);
 
 	/**
 	 * Serialize the current layout to a string, which allows to restore this layout later.
@@ -190,7 +190,7 @@ protected: // Helpers
 	 * Add the panel to a tab in the dockinggPanel. If the dockingPanel doesn't
 	 * have tabs, it will be converted accordingly.
 	 */
-	wxDockingEntity AddTabPanel(wxDockingInfo const &info, wxDockingEntity const &panel);
+	wxDockingEntity AddTab(wxDockingInfo const &info, wxDockingEntity const &panel);
 
 	/**
 	 * Creates a new wxNotebook tab panel with the userWindow as it's page. If the userWindow is nullptr then an empty
@@ -225,12 +225,12 @@ protected: // Helpers
 	/**
 	 * Helper function to create a panel of the specified type if no extra parameters are required
 	 */
-	wxDockingInfo CreatePanel(wxDockingInfo const &info, wxDockingEntity &parent, wxDockingEntityType type)
+	wxDockingEntity CreatePanel(wxDockingEntity &parent, wxDockingEntityType type)
 	{
-		wxDockingInfo inf = info;
-		inf.SetWindow(parent);
-		SendCreatePanel(inf, type);
-		return inf;
+		wxDockingInfo info;
+		info.SetWindow(parent);
+		SendCreatePanel(info, type);
+		return info.GetWindow();
 	}
 
 	void DoSize();
@@ -250,7 +250,7 @@ protected: // Helpers
 	 * The removed panel is returned. At this stage, the panel is not destroyed and the caller
 	 * is responsible for the lifetime of it. The returned window can be safely destroyed.
 	 */
-	bool RemoveNotebook(wxDockingEntity &notebook, wxDockingEntity &page, bool allowDestroy);
+	bool RemoveTab(wxDockingEntity &notebook, wxDockingEntity &page, bool allowDestroy);
 	bool RemoveSplitter(wxDockingEntity &splitter, wxDockingEntity &panel, bool allowDestroy);
 	bool RemoveFrame(wxDockingEntity &frame, wxDockingEntity &panel, bool allowDestroy);
 
@@ -267,7 +267,7 @@ protected: // Helpers
 	/**
 	 * Split the dockingPanel and add the panel in the specified direction.
 	 */
-	wxDockingEntity AddSplitPanel(wxDockingInfo const &info, wxDockingEntity userWindow);
+	wxDockingEntity AddSplitter(wxDockingInfo const &info, wxDockingEntity userWindow);
 
 	/**
 	 * Create a new wxSplitterWindow panel. 

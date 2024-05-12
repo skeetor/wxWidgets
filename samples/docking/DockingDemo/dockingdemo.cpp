@@ -1181,38 +1181,51 @@ void MyFrame::OnRemoveDockingPanel(wxCommandEvent &WXUNUSED(evt))
 void MyFrame::createInitialLayout()
 {
 	wxDockingInfo::GetDefaults()
-		.SetTabDirection(wxTOP)				// This is not really needed as it is default
+		.SetTabDirection(wxTOP)				// This should not really be needed as it is default, but it may depend on your OS.
 		//.SetTabDirection(wxBOTTOM)
 		//.SetTabDirection(wxLEFT)
 		//.SetTabDirection(wxRIGHT)
 	;
 
+	wxDockingState &gs = wxDockingState::GetInstance();
+
+	// Our frame should not ne deleted if the last panel is removed.
+	gs.SetLock(this);
+
+	wxDockingEntity ctrl = createSizeReportCtrl("Ctrl1.1");
 	wxDockingEntity root = AddPanel(wxDockingInfo("Size Report 1.1")
 		.SetWindow(this)
 		.SetDirection(wxCENTRAL)
 		//.SetDirection(wxLEFT)
 		.SetSize(200, -1)
-		, createSizeReportCtrl("Ctrl1.1")
+		, ctrl
 	);
 
-	wxDockingState &gs = wxDockingState::GetInstance();
-	gs.SetLock(root);
-	root = AddPanel(wxDockingInfo("Size Report 1.2")
-		.SetWindow(root)
-		, createSizeReportCtrl("Ctrl1.2")
+	AddPanel(wxDockingInfo("Size Report 1.1.1")
+		.SetWindow(ctrl)
+		.SetDirection(wxCENTRAL)
+		//.SetDirection(wxLEFT)
+		.SetSize(200, -1)
+		, createSizeReportCtrl("Ctrl1.1.1")
 	);
-	root = AddPanel(wxDockingInfo("Size Report 1.3")
-		.SetWindow(root)
-		, createSizeReportCtrl("Ctrl1.3")
-	);
-	root = AddPanel(wxDockingInfo("Size Report 1.4")
-		.SetWindow(root)
-		, createSizeReportCtrl("Ctrl1.4")
-	);
+
+	//gs.SetLock(root);
+	//root = AddPanel(wxDockingInfo("Size Report 1.2")
+	//	.SetWindow(root)
+	//	, createSizeReportCtrl("Ctrl1.2")
+	//);
+	//root = AddPanel(wxDockingInfo("Size Report 1.3")
+	//	.SetWindow(root)
+	//	, createSizeReportCtrl("Ctrl1.3")
+	//);
+	//root = AddPanel(wxDockingInfo("Size Report 1.4")
+	//	.SetWindow(root)
+	//	, createSizeReportCtrl("Ctrl1.4")
+	//);
 
 	wxDockingEntity l = AddPanel(wxDockingInfo("Size Report 2.0")
 		.SetWindow(root)
-		.Placeholder(true)			// Force the panel inside the existing (empty) panel, instead of next to it.
+		.Placeholder(true)			// Force the panel inside the existing (empty) panel, instead of next to it if applicable.
 		.SetDirection(wxRIGHT)
 		.SetSize(150, -1)
 		, createSizeReportCtrl("Ctrl2.0")
@@ -1220,6 +1233,7 @@ void MyFrame::createInitialLayout()
 
 	// DockingPanel is nullptr, so we split at the right side of the frame.
 	AddPanel(wxDockingInfo("Size Report 3.0")
+		.SetWindow(this)
 		.SetDirection(wxLEFT)
 		.SetSize(150, -1)
 		, createSizeReportCtrl("Ctrl3.0")
