@@ -409,8 +409,18 @@ wxDockingEntity wxDockingFrame::AddTab(wxDockingInfo const &info, wxDockingEntit
 	{
 		nbp = CreateTabPanel(info, nullptr);
 
+		wxDockingEntity parent = dockingTarget->GetParent();
+
+		// The parent has to be a valid docking panel.
+		bool found = false;
+		wxDockingEntityState const &ds = wxDockingState::GetInstance().FindPanelState(dockingTarget, &found);
+		if (!found)
+			return wxDockingEntity();
+
+		wxString title = ds.GetTitle();
+
 		// Replace the current dockingTarget with our new notebook.
-		ReplaceWindow(dockingTarget, nbp, info.GetTitle(), nullptr);
+		ReplaceWindow(dockingTarget, nbp, info.GetTitle(), parent);
 
 		// Insert the old dockingTarget as a page into the new notebook we just replaced it with
 		AttachTabPage(info, nbp, dockingTarget);
@@ -458,7 +468,7 @@ bool wxDockingFrame::AttachTabPage(wxDockingInfo const &info, wxDockingEntity co
 			nbs->RemovePage(0);
 
 			w->Reparent(nb);
-			nb->InsertPage(i, w, gs.PanelState(w).GetTitle(), info.isActive());
+			nb->InsertPage(i, w, gs.FindPanelState(w).GetTitle(), info.isActive());
 
 			i++;
 		}
@@ -466,7 +476,7 @@ bool wxDockingFrame::AttachTabPage(wxDockingInfo const &info, wxDockingEntity co
 	else
 	{
 		userWindow->Reparent(nb);
-		nb->InsertPage(i, userWindow, gs.PanelState(userWindow).GetTitle(), info.isActive());
+		nb->InsertPage(i, userWindow, gs.FindPanelState(userWindow).GetTitle(), info.isActive());
 	}
 
 	return true;

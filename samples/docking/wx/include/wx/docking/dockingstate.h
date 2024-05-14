@@ -64,7 +64,7 @@ public:
 	 * If force is true and the panel is already known, then nothing happens, as each panelstate is only added once
 	 */
 	wxDockingEntityState &PanelState(wxDockingEntity const &panel, bool force = true, bool *found = nullptr);
-	wxDockingEntityState const &PanelState(wxDockingEntity const &panel, bool *found = nullptr) const;
+	wxDockingEntityState const &FindPanelState(wxDockingEntity const &panel, bool *found = nullptr) const;
 
 	/**
 	 * Returns true if the panel is a known docking target.

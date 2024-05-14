@@ -85,7 +85,7 @@ bool wxDockingState::IsDraggable(wxDockingEntity const &panel) const
 bool wxDockingState::IsKnownPanel(wxDockingEntity const &panel) const
 {
 	bool isKnown = false;
-	PanelState(panel, &isKnown);
+	FindPanelState(panel, &isKnown);
 	return isKnown;
 }
 
@@ -115,7 +115,7 @@ wxDockingEntityState &wxDockingState::PanelState(wxDockingEntity const &panel, b
 	return *pos;
 }
 
-wxDockingEntityState const &wxDockingState::PanelState(wxDockingEntity const &panel, bool *found) const
+wxDockingEntityState const &wxDockingState::FindPanelState(wxDockingEntity const &panel, bool *found) const
 {
 	wxDockingEntityStates::const_iterator pos = std::find(panels.begin(), panels.end(), panel);
 

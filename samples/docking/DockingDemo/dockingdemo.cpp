@@ -974,8 +974,8 @@ void MyFrame::OnMouseRightUp(wxMouseEvent &event)
 		s = "UNKNOWN";
 
 	wxDockingState const &gs = wxDockingState::GetInstance();
-	wxDockingEntityState const &ps = gs.PanelState(p);
-	wxDockingEntityState const &ctrls = gs.PanelState(ctrl);
+	wxDockingEntityState const &ps = gs.FindPanelState(p);
+	wxDockingEntityState const &ctrls = gs.FindPanelState(ctrl);
 	if (!s.empty())
 	{
 		if (ps.IsLocked())
@@ -1172,7 +1172,8 @@ void MyFrame::OnRemoveDockingPanel(wxCommandEvent &WXUNUSED(evt))
 	wxSizeReportCtrl *w = m_activePanel;
 
 	// If the panel was successfully removed we can delete our window.
-	if(RemovePanel(wxDockingEntity(w)))
+	wxDockingEntity we = w;
+	if(RemovePanel(we))
 		delete w;
 
 	m_activePanel = nullptr;
@@ -1209,7 +1210,7 @@ void MyFrame::createInitialLayout()
 		, createSizeReportCtrl("Ctrl1.1.1")
 	);
 
-	//gs.SetLock(root);
+	gs.SetLock(root);
 	//root = AddPanel(wxDockingInfo("Size Report 1.2")
 	//	.SetWindow(root)
 	//	, createSizeReportCtrl("Ctrl1.2")
