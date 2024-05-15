@@ -71,7 +71,7 @@ namespace wxDockingUtils
 			if (!ds.IsKnownPanel(w))
 			{
 				child = w;
-				w = window->GetParent();
+				w = w->GetParent();
 				continue;
 			}
 
