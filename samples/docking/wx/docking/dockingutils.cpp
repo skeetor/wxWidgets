@@ -108,7 +108,7 @@ namespace wxDockingUtils
 		{
 			case wxDOCKING_SPLITTER:
 			case wxDOCKING_NOTEBOOK:
-			return true;
+				return true;
 		}
 
 		return false;
@@ -269,68 +269,94 @@ namespace wxDockingUtils
 		return std::sqrt(((double)coordinate.x - cx) * ((double)coordinate.x - cx) + ((double)coordinate.y - cy) * ((double)coordinate.y - cy));
 	}
 
-	bool ValidateTarget(wxDockingInfo &srcInfo, wxDockingInfo &tgt)
+	bool ValidateNotebookTarget(wxDockingInfo src, wxDockingInfo tgt, bool *isValid)
 	{
-		wxDockingEntity tw = tgt.GetDockingEntity();
-		if (!tw)
-			return false;
+		wxDockingEntity const &sw = src.GetDockingEntity();
 
-		wxDockingInfo src = srcInfo;
-		wxDockingEntity sw = src.GetDockingEntity();
-		if (!sw)
-			return false;
+		*isValid = false;
 
 		if (sw.GetType() == wxDOCKING_WINDOW)
+			src.UpdateToParent();
+
+		wxDockingEntity const &tw = tgt.GetDockingEntity();
+		if (tw.GetType() == wxDOCKING_WINDOW)
+			tgt.UpdateToParent();
+
+		// If both windows are not notebooks we are done.
+		if (sw.GetType() != wxDOCKING_NOTEBOOK && tw.GetType() != wxDOCKING_NOTEBOOK)
+			return false;
+
+		// Both panels must be known docking entities. If one is not, it may be a notebook i.E. inside some
+		// window which is not intended for docking (like an option dialog or such).
+		wxDockingState const &gs = wxDockingState::GetInstance();
+		if (!gs.IsKnownPanel(sw) || !gs.IsKnownPanel(tw))
+			return false;
+
+		bool isChild = IsChildOf(sw, tw);
+
+		// If the notebooks are different, they may still be nested inside each other.
+		if (sw.GetRawWindow() != tw.GetRawWindow())
 		{
-			wxDockingEntity parent = sw.GetRawWindow()->GetParent();
-			if (parent.GetType() == wxDOCKING_NOTEBOOK)
+			// If the target notebook is not nested inside our source notebook, we are save.
+			if (!isChild)
 			{
-				src.UpdateToParent();
-				sw = src.GetDockingEntity();
-			}
-		}
-
-		// If it is a notebook the target may be the same window as it could be a tab move.
-		// If the target is the same as the source, then we have to check if it is a notebook.
-		// In that case the user may want to move a tab to a new position.
-		// For a splitter, there is nothing we can do.
-		if (sw.GetType() == wxDOCKING_NOTEBOOK)
-		{
-			size_t si = src.GetPage();
-			wxNotebook *snb = sw.GetNotebook();
-			size_t ti = tgt.GetPage();
-
-			// Moving the last tab into the tab area doesn't make sense, as it would stay
-			// in the same position.
-			if (tgt.IsTabArea() && !tgt.IsOnTab() && si == snb->GetPageCount()-1)
-				return false;
-
-			// Move the whole notebook into itself.
-			if (si == wxNOT_FOUND && IsParentOf(snb, tgt.GetWindow()))
-				return false;
-
-			if (tw.GetType() == wxDOCKING_NOTEBOOK)
-			{
-				if (src.GetWindow() == tgt.GetWindow())
-				{
-					// If it is the same notebook, we can only move into a different tab.
-					if (ti == si)
-						return false;
-				}
-
+				*isValid = true;
 				return true;
 			}
 
-			wxWindow *w = snb;
-			if (si != wxNOT_FOUND)
-				w = snb->GetPage(si);
+			// If the notebook is a nested child, we are save if we just move a single tab.
+			if (src.IsOnTab())
+			{
+				*isValid = true;
+				return true;
+			}
 
-			// Is the target window part of the current source page window?
-			if (IsParentOf(w, tgt.GetWindow()))
-				return false;
-
+			// We can not move the whole notebook into a nested notebook.
+			*isValid = false;
 			return true;
 		}
+
+		// We are moving within our notebook
+
+		// We can not move the whole notebook into ourself.
+		if (!src.IsOnTab() || src.GetPage() == wxNOT_FOUND)
+		{
+			*isValid = false;
+			return true;
+		}
+
+		// It has to be a differen tab we want to move into.
+		if (src.GetPage() == tgt.GetPage())
+		{
+			*isValid = false;
+			return true;
+		}
+
+		// Check if we move the last page into the last page.
+		wxNotebook *sn = sw.GetNotebook();
+		if (src.GetPage() == sn->GetPageCount() && tgt.GetPage() == wxNOT_FOUND)
+		{
+			*isValid = false;
+			return true;
+		}
+
+		*isValid = true;
+		return true;
+	}
+
+	bool ValidateTarget(wxDockingInfo const &src, wxDockingInfo const &tgt)
+	{
+		wxDockingEntity const tw = tgt.GetDockingEntity();
+		if (!tw)
+			return false;
+
+		wxDockingEntity const sw = src.GetDockingEntity();
+		if (!sw)
+			return false;
+
+		bool isValid = false;
+		if (ValidateNotebookTarget(src, tgt, &isValid))
+			return isValid;
 		else if (tw.GetType() == wxDOCKING_SPLITTER)
 		{
 			// We have to prevent the case where the window is moved into it's own splitter
@@ -340,7 +366,7 @@ namespace wxDockingUtils
 		}
 
 		// Check if the source is a parent of the target, which we want to avoid.
-		// i.E. The user grabs the notebook and tries to move it into a page of it. Bad idea!:)
+		// i.E. The user grabs a splitter and tries to move it into a page of itself. Bad idea!:)
 		return !IsChildOf(sw, tw);
 	}
 

@@ -74,7 +74,15 @@ namespace wxDockingUtils
 	/**
 	 * Validate if the target is allowed for docking
 	 */
-	WXDLLIMPEXP_DOCKING bool ValidateTarget(wxDockingInfo &src, wxDockingInfo &tgt);
+	WXDLLIMPEXP_DOCKING bool ValidateTarget(wxDockingInfo const &src, wxDockingInfo const &tgt);
+
+	/**
+	 * Check if we have notebooks involved in our docking attempt. If yes we return true
+	 * otherwise its false. If the return value is true, the isValid will be set to true
+	 * if the src can be savely moved into the target. If false is returned, then isValid
+	 * also false. isValid should only be evaluated if true is returned.
+	 */
+	bool ValidateNotebookTarget(wxDockingInfo src, wxDockingInfo tgt, bool *isValid);
 
 	/**
 	 * Calculate the distance depending on the direction. 'orientation' specifies the direction of the object

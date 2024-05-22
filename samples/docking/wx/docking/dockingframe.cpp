@@ -1345,15 +1345,17 @@ void wxDockingFrame::OnTrackMove(wxDockingEvent &event)
 
 	// The overlay may already have decided what should happen
 	wxDirection dir = tgt.GetDirection();
-	wxDockingEntity tw = tgt.GetDockingEntity();
 	bool allow = event.IsDockingAllowed();
-
-	if (dir == wxALL)
-		allow = UpdateDirection(src, tgt, event.GetEventPos());
 
 	// If we are still allowed we need to check if the target is valid. If we are allready not allowed the verdict
 	// wont get better and we can skip this check.
-	if (allow && (allow = wxDockingUtils::ValidateTarget(src, tgt)))
+	if (allow)
+	{
+		allow = wxDockingUtils::ValidateTarget(src, tgt);
+		event.SetDockingAllow(allow);
+	}
+
+	if (allow && (allow = UpdateDirection(src, tgt, event.GetEventPos())))
 	{
 		// If all checks passed and we are still allowed to dock, we now ask the client if this is a valid target for docking.
 		// The client can use this event for its application logic to decide if a particular target is valid.
@@ -1362,10 +1364,7 @@ void wxDockingFrame::OnTrackMove(wxDockingEvent &event)
 		evt = event;
 		evt.SetEventType(wxEVT_DOCKING_TRY_REMOVE_PANEL);
 		GetEventHandler()->ProcessEvent(evt);
-		allow = evt.IsAllowed();
 	}
-
-	event.SetDockingAllow(allow);
 
 	// TODO: Debugging only
 	PrintDebugBar(event, wxDockingState::GetInstance());
